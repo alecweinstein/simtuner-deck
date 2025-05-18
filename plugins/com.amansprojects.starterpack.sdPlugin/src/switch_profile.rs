@@ -9,31 +9,28 @@ struct SwitchProfileEvent {
 	profile: String,
 }
 
-pub fn key_up(event: KeyEvent) -> EventHandlerResult {
-	if let Some(value) = event.payload.settings.as_object().unwrap().get("profile") {
-		let (mut stream, _) = tungstenite::connect(format!(
-			"ws://localhost:{}",
-			std::env::args().nth(2).unwrap()
-		))?;
-		stream.write(tungstenite::Message::text(serde_json::to_string(
-			&SwitchProfileEvent {
-				event: "switchProfile",
-				device: event
-					.payload
-					.settings
-					.as_object()
-					.unwrap()
-					.get("device")
-					.unwrap()
-					.as_str()
-					.unwrap()
-					.to_owned(),
-				profile: value.as_str().unwrap().to_owned(),
-			},
-		)?))?;
-		stream.close(None)?;
-		stream.flush()?;
-	}
+pub async fn key_up(event: KeyEvent, outbound: &mut OutboundEventManager) -> EventHandlerResult {
+	outbound
+		.send_event(SwitchProfileEvent {
+			event: "switchProfile",
+			device: event
+				.payload
+				.settings
+				.as_object()
+				.and_then(|x| x.get("device"))
+				.and_then(|x| x.as_str())
+				.unwrap_or(&event.device)
+				.to_owned(),
+			profile: event
+				.payload
+				.settings
+				.as_object()
+				.and_then(|x| x.get("profile"))
+				.and_then(|x| x.as_str())
+				.unwrap_or("Default")
+				.to_owned(),
+		})
+		.await?;
 
 	Ok(())
 }
