@@ -1,7 +1,7 @@
 Sim Deck modifications to OpenDeck
 Date: 2026-11-16
 
-2026-11-16, later the same day: the user-visible product name is Sim Deck (was Sim Tuner Deck). The identifier stays com.simtuner.deck. mainBinaryName is sim-deck. Version 2.14.3. The AKP153 plugin is built in CI from alecweinstein/simtuner-deck-akp153@fedfea2aaf3c353f80807595323c96a2cc4abf43 (display name Sim Deck, device ids unchanged) instead of the upstream 0.11.1 zip. The NSIS installer removes a previous "Sim Tuner Deck" install, its shortcuts, and its autostart Run value before installing Sim Deck.
+2026-11-16, later the same day: the user-visible product name is Sim Deck (was Sim Tuner Deck). App icons, the tray icon, and the installer icon, header, and sidebar use simtuner/branding/simdeck-logo.png (bolt tile plus a 3×2 keypad badge). The identifier stays com.simtuner.deck. mainBinaryName is sim-deck. Version 2.14.3. The AKP153 plugin is built in CI from alecweinstein/simtuner-deck-akp153@fedfea2aaf3c353f80807595323c96a2cc4abf43 (display name Sim Deck, device ids unchanged) instead of the upstream 0.11.1 zip. The NSIS installer removes a previous "Sim Tuner Deck" install, its shortcuts, and its autostart Run value before installing Sim Deck.
 
 Date: 2026-11-16
 Author: Sim Tuner
