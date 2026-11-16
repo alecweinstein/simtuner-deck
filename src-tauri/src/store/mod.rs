@@ -1,8 +1,6 @@
 pub mod profiles;
 mod simplified_profile;
 
-use crate::shared::is_flatpak;
-
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -136,8 +134,6 @@ pub struct Settings {
 	pub rotation: u16,
 	pub background: bool,
 	pub autolaunch: bool,
-	pub updatecheck: bool,
-	pub statistics: bool,
 	pub separatewine: bool,
 	pub developer: bool,
 	pub disableelgato: bool,
@@ -152,14 +148,11 @@ impl Default for Settings {
 			sleep_timeout_minutes: 0,
 			sleep_when_computer_locked: false,
 			rotation: 0,
-			background: !is_flatpak(),
-			autolaunch: false,
-			updatecheck: option_env!("OPENDECK_DISABLE_UPDATE_CHECK").is_none() && !is_flatpak(),
-			// Consent is given by the user on install so it is OK to have the default be `true`
-			statistics: true,
+			background: true,
+			autolaunch: true,
 			separatewine: false,
 			developer: false,
-			disableelgato: false,
+			disableelgato: true,
 		}
 	}
 }

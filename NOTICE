@@ -1,0 +1,23 @@
+Sim Tuner Deck is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner, 2026-11-16.
+Source: https://github.com/alecweinstein/simtuner-deck
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. The license text is LICENSE.md in this install directory.
+
+OpenDeck upstream: https://github.com/nekename/OpenDeck
+This tree is Alec Weinstein's public fork, rebranded and modified for the Sim Tuner golf-sim controller (Ajazz AKP153E). Sim Tuner itself (simtuner.com) is a separate closed-source application. None of its source is included here.
+
+Modified files are listed in CHANGES, with the date of this modification, to satisfy GPL-3.0 section 5(a).
+
+Third-party notices, including MPL-2.0 components (elgato-streamdeck and, via the bundled AKP153 plugin, mirajazz) and MIT/Apache-2.0 dependencies, are in THIRD-PARTY-LICENSES.md.
+
+Bundled plugins:
+- OpenDeck Starter Pack (com.amansprojects.starterpack), GPL-3.0-or-later, built from the sources in this repository.
+- Golf Deck Strip (com.simtuner.golfdeck.strip), separate companion process shipped as the binaries in simtuner/plugin. It speaks the OpenDeck plugin protocol and is not linked into the host.
+- Ajazz AKP153 / Mirabox HSV293S device plugin (st.lynx.plugins.opendeck-akp153) 0.11.1, GPL-3.0-or-later.
+  Source: https://github.com/alecweinstein/simtuner-deck-akp153
+  Pinned commit: fc4116ab1fb70fecbc619b95ad59a5320b24b3ce (tag v0.11.1).
+  That commit is identical to https://github.com/4ndv/opendeck-akp153 tag v0.11.1.
+  The fork publishes no release assets, so the binaries are the upstream release built from that commit:
+  https://github.com/4ndv/opendeck-akp153/releases/download/v0.11.1/opendeck-akp153.plugin.zip
+
+No kernel driver is installed. The AKP153E is a plain HID device.

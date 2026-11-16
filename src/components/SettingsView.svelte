@@ -2,9 +2,7 @@
 	import ClockClockwise from "phosphor-svelte/lib/ClockClockwise";
 	import ClockCounterClockwise from "phosphor-svelte/lib/ClockCounterClockwise";
 	import Gear from "phosphor-svelte/lib/Gear";
-	import Heart from "phosphor-svelte/lib/Heart";
 	import Scroll from "phosphor-svelte/lib/Scroll";
-	import Star from "phosphor-svelte/lib/Star";
 	import Popup from "./Popup.svelte";
 	import Tooltip from "./Tooltip.svelte";
 
@@ -138,16 +136,6 @@
 			</Tooltip>
 		</div>
 
-		<div class="flex flex-row items-center m-2 space-x-2">
-			<label for="settings-updatecheck" class="text-neutral-400">{$t("settings.updatecheck")}</label>
-			<input type="checkbox" bind:checked={$settings.updatecheck} id="settings-updatecheck" />
-		</div>
-
-		<div class="flex flex-row items-center m-2 space-x-2">
-			<label for="settings-statistics" class="text-neutral-400">{$t("settings.statistics")}</label>
-			<input type="checkbox" bind:checked={$settings.statistics} id="settings-statistics" />
-		</div>
-
 		{#if !buildInfo?.split("</summary>")[0]?.includes("windows")}
 			<div class="flex flex-row items-center m-2 space-x-2">
 				<label for="settings-separatewine" class="text-neutral-400">{$t("settings.separatewine")}</label>
@@ -211,18 +199,11 @@
 	</div>
 
 	<svelte:fragment slot="footer">
-		<div class="flex flex-row items-center mt-4 text-sm text-neutral-400">
-			<span class="mr-1">
-				{$t("settings.footer.1")}
-				<button on:click={() => invoke("open_url", { url: "https://github.com/nekename/OpenDeck" })} class="underline">{$t("settings.footer.2")}</button>
-			</span>
-			<Star weight="fill" fill="yellow" />
-			<span class="mx-1">
-				{$t("settings.footer.3")}
-				<button on:click={() => invoke("open_url", { url: "https://github.com/sponsors/nekename" })} class="underline">{$t("settings.footer.4")}</button>
-			</span>
-			<Heart weight="fill" fill="fuchsia" />
-			<span class="ml-1">{$t("settings.footer.5")}</span>
-		</div>
+		<p class="mt-4 text-xs text-neutral-400">
+			Sim Tuner Deck is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner, 2026-11-16. Source:
+			<button class="underline" on:click={() => invoke("open_url", { url: "https://github.com/alecweinstein/simtuner-deck" })}
+				>https://github.com/alecweinstein/simtuner-deck</button
+			>
+		</p>
 	</svelte:fragment>
 </Popup>

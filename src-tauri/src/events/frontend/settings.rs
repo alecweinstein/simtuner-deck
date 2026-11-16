@@ -57,6 +57,7 @@ pub fn open_log_directory() -> Result<(), Error> {
 pub fn get_build_info() -> String {
 	format!(
 		r#"
+		<p>Sim Tuner Deck is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner, 2026-11-16. Source: https://github.com/alecweinstein/simtuner-deck</p>
 		<details>
 			<summary> {} v{} ({}) on {} </summary>
 			{}

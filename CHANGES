@@ -1,0 +1,39 @@
+Sim Tuner Deck modifications to OpenDeck
+Date: 2026-11-16
+Author: Sim Tuner
+Base: OpenDeck 2.14.2 (GPL-3.0-or-later) by nekename, via https://github.com/alecweinstein/simtuner-deck
+
+Prominent notice (GPL-3.0 §5(a)): this work was modified on 2026-11-16. The files below are the modified parts of OpenDeck. New files added for the white-label build are listed after them.
+
+Modified:
+- product_name.txt — product name is Sim Tuner Deck
+- package.json — package metadata
+- README.md — product docs; upstream install channels removed
+- install_opendeck.sh — no longer installs upstream OpenDeck packages
+- src-tauri/Cargo.toml — Aptabase dependency removed; repository and description updated
+- src-tauri/Cargo.lock — lockfile updated for the Aptabase removal
+- src-tauri/build.rs — also copies the prebuilt Golf Deck strip plugin and AKP153 plugin into the built-in plugin set
+- src-tauri/tauri.conf.json — product name, binary name, identifier com.simtuner.deck, publisher, icons, descriptions, bundled profiles and license files; streamdeck:// and opendeck:// URL schemes removed (simtuner:// and openaction:// remain)
+- src-tauri/tauri.windows.conf.json — window title, per-user NSIS installer, embedded WebView2 bootstrapper
+- src-tauri/src/main.rs — telemetry, upstream update check, star/donate dialogs, and the old OpenDeck config-directory migration removed; tray id and tooltip; single-instance bus name; start-at-login enabled from the default setting; streamdeck:// argument handling removed
+- src-tauri/src/store/mod.rs — default settings: start at login on, run in background on, Elgato devices disabled, update check and statistics removed
+- src-tauri/src/events/frontend/plugins.rs — telemetry event removed
+- src-tauri/src/events/frontend/settings.rs — about text
+- src-tauri/src/events/inbound/devices.rs — telemetry event removed; Golf Deck profile seed on device registration
+- src/components/SettingsView.svelte — statistics, update check, and star/donate footer removed; GPL about text added
+- src/lib/settings.ts — settings type matches the backend
+- src-tauri/bundle/opendeck.desktop — desktop name
+- src-tauri/icons/* — replaced with the Sim Tuner logo
+- .github/workflows/publish.yml — removed (it published multi-platform OpenDeck releases)
+- .fossim.json — removed (pointed at the upstream listing service)
+
+Added:
+- src-tauri/src/golfdeck.rs — first-connect profile seeding for AKP153 / AKP153E
+- src-tauri/nsis/installer.nsi — NSIS template with the welcome page skipped; GPL license page kept
+- src-tauri/nsis/hooks.nsh — always create the desktop shortcut
+- src-tauri/nsis/header.bmp, sidebar.bmp — installer artwork from the logo
+- .github/workflows/windows-setup.yml — Windows NSIS build, artifact, and GitHub Release
+- NOTICE, CHANGES, THIRD-PARTY-LICENSES.md
+- simtuner/ — Golf Deck profiles, icons, strip plugin, AKP153 plugin binaries, and branding
+
+App icons are generated from simtuner/branding/simtuner-logo.png (340×338). The master simtuner/branding/icon-square.png crops that logo to the rounded tile and makes the dark gray outside the tile transparent. Sizes at or below that master are downscales. 512 and 1024 images (icon.png and the larger .icns entries) are Lanczos upscales of a ~340px source, so they are softer than a native drawing at those sizes.
