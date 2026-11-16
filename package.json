@@ -1,9 +1,9 @@
 {
-	"name": "opendeck",
-	"description": "Use stream controllers",
-	"author": "Aman Khanna (nekename)",
+	"name": "simtuner-deck",
+	"description": "Sim Tuner Deck — golf-sim controller for the Ajazz AKP153E",
+	"author": "Sim Tuner",
 	"license": "GPL-3.0-or-later",
-	"repository": "https://github.com/nekename/OpenDeck",
+	"repository": "https://github.com/alecweinstein/simtuner-deck",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",

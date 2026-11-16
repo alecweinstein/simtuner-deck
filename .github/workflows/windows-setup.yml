@@ -1,0 +1,108 @@
+name: Windows setup
+
+# Sim Tuner Deck ships as one Windows NSIS setup .exe.
+# Upstream OpenDeck publish workflows (Flathub, AUR, multi-platform drafts) are not used.
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "simtuner-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      DENO_DIR: deno_cache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: ${{ runner.os }}-${{ hashFiles('deno.lock') }}
+
+      - name: Install frontend dependencies
+        run: deno install
+
+      - name: Build NSIS installer
+        run: deno task tauri build --bundles nsis
+
+      - name: Locate setup exe
+        id: exe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path src-tauri/target/release/bundle/nsis -Filter *.exe | Select-Object -First 1
+          if (-not $exe) { throw "NSIS setup exe not found" }
+          "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+          "name=$($exe.Name)" >> $env:GITHUB_OUTPUT
+          Write-Host "Built $($exe.FullName)"
+
+      - name: Authenticode sign with PFX
+        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $signtool) { throw "signtool.exe not found" }
+          $bytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+          $pfx = Join-Path $env:RUNNER_TEMP "simtuner-deck.pfx"
+          [IO.File]::WriteAllBytes($pfx, $bytes)
+          & $signtool sign /f $pfx /p $env:WINDOWS_CERTIFICATE_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "${{ steps.exe.outputs.path }}"
+          Remove-Item -Force $pfx
+
+      - name: Azure Trusted Signing
+        if: ${{ secrets.AZURE_TENANT_ID != '' && secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_SIGNING_ENDPOINT != '' && secrets.AZURE_SIGNING_PROFILE != '' }}
+        uses: azure/trusted-signing-action@v0.5.1
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_SIGNING_PROFILE }}
+          files: ${{ steps.exe.outputs.path }}
+
+      - name: Upload setup exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sim-Tuner-Deck-setup
+          path: ${{ steps.exe.outputs.path }}
+          if-no-files-found: error
+
+      - name: Attach setup exe to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.exe.outputs.path }}
+          name: Sim Tuner Deck ${{ github.ref_name }}
+          body: |
+            Per-user Windows NSIS setup for Sim Tuner Deck.
+            WebView2 bootstrapper is embedded. No device driver is installed.
+            The executable is Authenticode-signed only when repository signing secrets are configured.
+            Source: https://github.com/alecweinstein/simtuner-deck
+          draft: false
+          prerelease: false

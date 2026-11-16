@@ -1,0 +1,55 @@
+{
+  "Name": "Golf Deck Strip",
+  "Description": "Live Sim Tuner club, distance-to-pin, and last-shot data on the Ajazz AKP153E side strip.",
+  "Author": "Golf Deck",
+  "Version": "1.0.0",
+  "SDKVersion": 2,
+  "CodePathWin": "golfdeck-strip.exe",
+  "CodePathLin": "golfdeck-strip",
+  "CodePath": "golfdeck-strip.exe",
+  "CodePaths": {
+    "x86_64-pc-windows-msvc": "golfdeck-strip.exe",
+    "x86_64-unknown-linux-gnu": "golfdeck-strip",
+    "aarch64-unknown-linux-gnu": "golfdeck-strip"
+  },
+  "Icon": "icons/plugin",
+  "Category": "Golf Deck",
+  "CategoryIcon": "icons/plugin",
+  "OS": [
+    { "Platform": "windows", "MinimumVersion": "10" },
+    { "Platform": "linux" }
+  ],
+  "Software": { "MinimumVersion": "6.0" },
+  "Actions": [
+    {
+      "Icon": "icons/club",
+      "Name": "Club",
+      "States": [{ "Image": "icons/club", "Title": "", "ShowTitle": false }],
+      "Controllers": ["Keypad"],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "Tooltip": "Live selected club from Sim Tuner (display only).",
+      "UUID": "com.simtuner.golfdeck.strip.club"
+    },
+    {
+      "Icon": "icons/distance",
+      "Name": "Distance",
+      "States": [{ "Image": "icons/distance", "Title": "", "ShowTitle": false }],
+      "Controllers": ["Keypad"],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "Tooltip": "Live distance to target from Sim Tuner (display only).",
+      "UUID": "com.simtuner.golfdeck.strip.distance"
+    },
+    {
+      "Icon": "icons/lastshot",
+      "Name": "Last Shot",
+      "States": [{ "Image": "icons/lastshot", "Title": "", "ShowTitle": false }],
+      "Controllers": ["Keypad"],
+      "SupportedInMultiActions": false,
+      "DisableAutomaticStates": true,
+      "Tooltip": "Live last-shot ball speed and carry from Sim Tuner (display only).",
+      "UUID": "com.simtuner.golfdeck.strip.lastshot"
+    }
+  ]
+}

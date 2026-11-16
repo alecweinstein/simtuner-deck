@@ -6,6 +6,7 @@ mod device_sleep;
 mod elgato;
 mod encoder_layouts;
 mod events;
+mod golfdeck;
 mod plugins;
 mod power_events;
 mod shared;
@@ -119,11 +120,6 @@ async fn main() {
 				let _ = hide_window(app.handle());
 			}
 
-			let old = app.path().config_dir().unwrap().join("com.amansprojects.opendeck");
-			if old.exists() {
-				let _ = std::fs::rename(old, app.path().app_config_dir().unwrap());
-			}
-
 			let mut settings = store::get_settings();
 			use std::cmp::Ordering;
 			use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
@@ -145,53 +141,19 @@ async fn main() {
 					return Ok(());
 				}
 				Ordering::Greater => {
-					let old_version = settings.value.version.clone();
 					settings.value.version = built_info::PKG_VERSION.to_owned();
 					settings.save()?;
-					if old_version == "0.0.0" {
-						app.dialog()
-							.message(format!(
-								r#"Thanks for installing {PRODUCT_NAME}!
-If you have any issues, please reach out on any of the support channels listed on GitHub (and make sure to star the project while you're there!).
-
-Some minimal statistics (such as operating system and plugins installed) will be collected from the next time the app starts.
-If you do not wish to support development in this way, please disable statistics in the settings.
-
-Enjoy!"#,
-							))
-							.title(format!("{PRODUCT_NAME} has successfully been installed"))
-							.kind(MessageDialogKind::Info)
-							.show(|_| ());
-						settings.value.statistics = false;
-					} else {
-						app.dialog()
-							.message(format!(
-								r#"{PRODUCT_NAME} has been updated to v{}!
-Every update brings features, bug fixes, and other improvements, which I spend my time implementing for free.
-
-If you spent $125 on your hardware, please consider spending $10 on the software that makes it work.
-You can donate to support development with just a few clicks on GitHub Sponsors, Ko-fi or Liberapay.
-If you have already donated, thank you so much for your support!"#,
-								built_info::PKG_VERSION
-							))
-							.title(format!("{PRODUCT_NAME} has successfully been updated"))
-							.kind(MessageDialogKind::Info)
-							.show(|_| ());
-					}
 				}
 				_ => {}
 			}
 
-			use tauri_plugin_aptabase::{Builder, EventTracker, InitOptions};
-			app.handle().plugin(
-				Builder::new(if settings.value.statistics { "A-SH-3841489320" } else { "" })
-					.with_options(InitOptions {
-						host: Some("https://aptabase.amankhanna.me".to_owned()),
-						flush_interval: None,
-					})
-					.build(),
-			)?;
-			let _ = app.track_event("app_started", None);
+			#[cfg(not(debug_assertions))]
+			if settings.value.autolaunch {
+				use tauri_plugin_autostart::ManagerExt;
+				if let Err(error) = app.autolaunch().enable() {
+					log::warn!("Failed to enable start at login: {error}");
+				}
+			}
 
 			tokio::spawn(async {
 				loop {
@@ -224,7 +186,8 @@ If you have already donated, thank you so much for your support!"#,
 			let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
 			let separator = PredefinedMenuItem::separator(app)?;
 			let menu = MenuBuilder::new(app).items(&[&label, &separator, &show, &hide, &separator, &restart, &quit]).build()?;
-			let _tray = TrayIconBuilder::with_id("opendeck")
+			let _tray = TrayIconBuilder::with_id("simtuner-deck")
+				.tooltip(PRODUCT_NAME)
 				.menu(&menu)
 				.icon(app.default_window_icon().unwrap().clone())
 				.show_menu_on_left_click(false)
@@ -259,39 +222,6 @@ If you have already donated, thank you so much for your support!"#,
 				let _ = app.deep_link().register_all();
 			}
 
-			async fn update() -> Result<(), anyhow::Error> {
-				let res = reqwest::Client::new()
-					.get("https://api.github.com/repos/nekename/OpenDeck/releases/latest")
-					.header("Accept", "application/vnd.github+json")
-					.header("User-Agent", "OpenDeck")
-					.send()
-					.await?
-					.json::<serde_json::Value>()
-					.await?;
-				let tag_name = res.get("tag_name").unwrap().as_str().unwrap();
-				if semver::Version::parse(built_info::PKG_VERSION)?.cmp(&semver::Version::parse(&tag_name[1..])?) == Ordering::Less {
-					let app = APP_HANDLE.get().unwrap();
-					app.dialog()
-						.message(format!(
-							"A new version of {PRODUCT_NAME}, {}, is available.\nUpdate description:\n\n{}",
-							tag_name,
-							res.get("body").map(|v| v.as_str().unwrap()).unwrap_or("No description").trim()
-						))
-						.title(format!("{PRODUCT_NAME} update available"))
-						.show(|_| ());
-				}
-
-				Ok(())
-			}
-
-			if settings.value.updatecheck {
-				tokio::spawn(async {
-					if let Err(error) = update().await {
-						log::warn!("Failed to update application: {error}");
-					}
-				});
-			}
-
 			Ok(())
 		})
 		.plugin(
@@ -305,7 +235,7 @@ If you have already donated, thank you so much for your support!"#,
 		.plugin(
 			tauri_plugin_single_instance::Builder::new()
 				.callback(|app, args, _| {
-					if let Some(pos) = args.iter().position(|x| x.starts_with("openaction://") || x.starts_with("streamdeck://"))
+					if let Some(pos) = args.iter().position(|x| x.starts_with("openaction://") || x.starts_with("simtuner://"))
 						&& let Ok(url) = reqwest::Url::parse(&args[pos])
 						&& let Some(mut path) = url.path_segments()
 					{
@@ -317,7 +247,7 @@ If you have already donated, thank you so much for your support!"#,
 								let _ = show_window(app);
 							}
 
-							let plugin_id = if url.scheme() == "streamdeck" { format!("{plugin_id}.sdPlugin") } else { plugin_id.to_owned() };
+							let plugin_id = plugin_id.to_owned();
 							let url = args[pos].clone();
 							std::thread::spawn(move || {
 								tauri::async_runtime::block_on(async move {
@@ -364,7 +294,7 @@ If you have already donated, thank you so much for your support!"#,
 						let _ = show_window(app);
 					}
 				})
-				.dbus_id("me.amankhanna.opendeck")
+				.dbus_id("com.simtuner.deck")
 				.build(),
 		)
 		.plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec!["--hide"])))
@@ -411,8 +341,6 @@ If you have already donated, thank you so much for your support!"#,
 			}
 
 			tokio::spawn(elgato::reset_devices());
-			use tauri_plugin_aptabase::EventTracker;
-			app.flush_events_blocking();
 		}
 	});
 }

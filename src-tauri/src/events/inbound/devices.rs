@@ -8,6 +8,7 @@ use serde::Deserialize;
 
 pub async fn register_device(uuid: &str, mut event: PayloadEvent<crate::shared::DeviceInfo>) -> Result<(), anyhow::Error> {
 	if uuid.is_empty() || Some(uuid) == DEVICE_NAMESPACES.read().await.get(&event.payload.id[..2]).map(|x| x.as_str()) {
+		crate::golfdeck::seed_if_needed(&event.payload);
 		if let Ok(profiles) = get_device_profiles(&event.payload.id) {
 			let mut profile_stores = crate::store::profiles::PROFILE_STORES.write().await;
 			for profile in profiles {
@@ -38,12 +39,6 @@ pub async fn register_device(uuid: &str, mut event: PayloadEvent<crate::shared::
 		{
 			let _ = crate::events::outbound::will_appear::will_appear(instance).await;
 		}
-
-		use tauri_plugin_aptabase::EventTracker;
-		let _ = crate::APP_HANDLE
-			.get()
-			.unwrap()
-			.track_event("device_registered", Some(serde_json::json!({ "name": event.payload.name })));
 
 		Ok(())
 	} else {

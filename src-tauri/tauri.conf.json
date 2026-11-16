@@ -9,7 +9,15 @@
 	"bundle": {
 		"active": true,
 		"targets": "all",
-		"resources": { "target/plugins/": "plugins/" },
+		"resources": {
+			"target/plugins/": "plugins/",
+			"../simtuner/profiles/": "golfdeck-profiles/",
+			"../LICENSE.md": "LICENSE.md",
+			"../NOTICE": "NOTICE",
+			"../CHANGES": "CHANGES",
+			"../THIRD-PARTY-LICENSES.md": "THIRD-PARTY-LICENSES.md"
+		},
+		"licenseFile": "../LICENSE.md",
 		"linux": {
 			"deb": {
 				"desktopTemplate": "bundle/opendeck.desktop",
@@ -26,9 +34,9 @@
 				}
 			}
 		},
-		"publisher": "Aman Khanna (nekename)",
-		"shortDescription": "Use stream controllers",
-		"longDescription": "OpenDeck is a desktop application for using stream controller devices like the Elgato Stream Deck. OpenDeck supports plugins made for the original Stream Deck SDK, allowing many plugins made for the Elgato software ecosystem to be used.",
+		"publisher": "Sim Tuner",
+		"shortDescription": "Golf-sim controller for the Ajazz AKP153E",
+		"longDescription": "Sim Tuner Deck is a white-label build of OpenDeck for a Sim Tuner golf-sim controller on the Ajazz AKP153E. It is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner.",
 		"category": "Productivity",
 		"icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
 		"macOS": {
@@ -36,20 +44,20 @@
 			"signingIdentity": "-"
 		}
 	},
-	"productName": "OpenDeck",
-	"mainBinaryName": "opendeck",
-	"identifier": "opendeck",
+	"productName": "Sim Tuner Deck",
+	"mainBinaryName": "simtuner-deck",
+	"identifier": "com.simtuner.deck",
 	"plugins": {
 		"deep-link": {
 			"desktop": {
-				"schemes": ["opendeck", "openaction", "streamdeck"]
+				"schemes": ["simtuner", "openaction"]
 			}
 		}
 	},
 	"app": {
 		"windows": [
 			{
-				"title": "OpenDeck",
+				"title": "Sim Tuner Deck",
 				"fullscreen": false,
 				"resizable": true,
 				"width": 800,

@@ -1,0 +1,22 @@
+Ajazz AKP153 / Mirabox HSV293S device plugin
+Version: 0.11.1
+License: GPL-3.0-or-later (see the plugin author's repository)
+
+Source fork: https://github.com/alecweinstein/simtuner-deck-akp153
+Pinned commit: fc4116ab1fb70fecbc619b95ad59a5320b24b3ce
+Pinned tag: v0.11.1
+
+That commit is the same object as https://github.com/4ndv/opendeck-akp153 tag v0.11.1.
+The fork has tags and no GitHub Release assets. The binaries in
+st.lynx.plugins.opendeck-akp153.sdPlugin/ are the files from the upstream release
+built from that commit:
+
+https://github.com/4ndv/opendeck-akp153/releases/download/v0.11.1/opendeck-akp153.plugin.zip
+
+Device namespace: 99
+AKP153E rev. 1: VID:PID 0300:1010, id 99-355499441494-153E, name "Ajazz AKP153E"
+AKP153E rev. 2: VID:PID 0300:3010, id 99-<serial>, name "Ajazz AKP153E (rev. 2)"
+AKP153: VID:PID 5548:6674, id 99-355499441494-153, name "Ajazz AKP153"
+
+mirajazz (MPL-2.0), used by this plugin and not by the host binary:
+https://github.com/4ndv/mirajazz
