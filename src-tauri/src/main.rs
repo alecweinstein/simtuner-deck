@@ -186,7 +186,7 @@ async fn main() {
 			let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
 			let separator = PredefinedMenuItem::separator(app)?;
 			let menu = MenuBuilder::new(app).items(&[&label, &separator, &show, &hide, &separator, &restart, &quit]).build()?;
-			let _tray = TrayIconBuilder::with_id("simtuner-deck")
+			let _tray = TrayIconBuilder::with_id("sim-deck")
 				.tooltip(PRODUCT_NAME)
 				.menu(&menu)
 				.icon(app.default_window_icon().unwrap().clone())

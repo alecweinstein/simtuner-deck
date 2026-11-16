@@ -71,8 +71,8 @@ fn main() {
 		panic!("Failed to build builtin plugins: {error}");
 	}
 
-	// Prebuilt plugins. The AKP153 binaries are the v0.11.1 release of
-	// alecweinstein/simtuner-deck-akp153 @ fc4116ab (same commit as 4ndv/opendeck-akp153 v0.11.1).
+	// Prebuilt plugins. CI builds the AKP153 Windows binary from the commit in
+	// simtuner/akp153/PIN and places it in the folder below before this script runs.
 	let prebuilt = [
 		("../simtuner/plugin/com.simtuner.golfdeck.strip.sdPlugin", "com.simtuner.golfdeck.strip.sdPlugin"),
 		("../simtuner/akp153/st.lynx.plugins.opendeck-akp153.sdPlugin", "st.lynx.plugins.opendeck-akp153.sdPlugin"),

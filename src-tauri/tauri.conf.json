@@ -36,7 +36,7 @@
 		},
 		"publisher": "Sim Tuner",
 		"shortDescription": "Golf-sim controller for the Ajazz AKP153E",
-		"longDescription": "Sim Tuner Deck is a white-label build of OpenDeck for a Sim Tuner golf-sim controller on the Ajazz AKP153E. It is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner.",
+		"longDescription": "Sim Deck is a white-label build of OpenDeck for a Sim Tuner golf-sim controller on the Ajazz AKP153E. It is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner.",
 		"category": "Productivity",
 		"icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
 		"macOS": {
@@ -44,8 +44,8 @@
 			"signingIdentity": "-"
 		}
 	},
-	"productName": "Sim Tuner Deck",
-	"mainBinaryName": "simtuner-deck",
+	"productName": "Sim Deck",
+	"mainBinaryName": "sim-deck",
 	"identifier": "com.simtuner.deck",
 	"plugins": {
 		"deep-link": {
@@ -57,7 +57,7 @@
 	"app": {
 		"windows": [
 			{
-				"title": "Sim Tuner Deck",
+				"title": "Sim Deck",
 				"fullscreen": false,
 				"resizable": true,
 				"width": 800,

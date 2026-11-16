@@ -17,7 +17,7 @@
 	"app": {
 		"windows": [
 			{
-				"title": "Sim Tuner Deck",
+				"title": "Sim Deck",
 				"fullscreen": false,
 				"resizable": true,
 				"width": 800,
