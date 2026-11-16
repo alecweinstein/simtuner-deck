@@ -11,9 +11,10 @@ use tauri::Manager;
 const GOLF_HOME: &str = "Golf Home";
 
 /// Ajazz AKP153, AKP153E (0300:1010), and AKP153E rev. 2 (0300:3010).
-/// Names come from the bundled opendeck-akp153 plugin (`Kind::human_name`).
+/// The bundled plugin reports these as "Sim Deck". The older Ajazz names still match.
+/// The profile folder is the device id (`99-…`), which the rename does not change.
 pub fn is_golf_deck(device: &DeviceInfo) -> bool {
-	device.id.starts_with("99-") && matches!(device.name.as_str(), "Ajazz AKP153" | "Ajazz AKP153E" | "Ajazz AKP153E (rev. 2)")
+	device.id.starts_with("99-") && matches!(device.name.as_str(), "Sim Deck" | "Ajazz AKP153" | "Ajazz AKP153E" | "Ajazz AKP153E (rev. 2)")
 }
 
 pub fn seed_if_needed(device: &DeviceInfo) {
@@ -232,6 +233,7 @@ mod tests {
 			infobars: 0,
 			r#type: 0,
 		};
+		assert!(is_golf_deck(&deck("Sim Deck")));
 		assert!(is_golf_deck(&deck("Ajazz AKP153")));
 		assert!(is_golf_deck(&deck("Ajazz AKP153E")));
 		assert!(is_golf_deck(&deck("Ajazz AKP153E (rev. 2)")));

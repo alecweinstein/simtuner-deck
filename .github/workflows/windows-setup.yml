@@ -1,6 +1,6 @@
 name: Windows setup
 
-# Sim Tuner Deck ships as one Windows NSIS setup .exe.
+# Sim Deck ships as one Windows NSIS setup .exe.
 # Upstream OpenDeck publish workflows (Flathub, AUR, multi-platform drafts) are not used.
 
 on:
@@ -43,6 +43,27 @@ jobs:
 
       - name: Install frontend dependencies
         run: deno install
+
+      - name: Build AKP153 plugin from pinned commit
+        shell: pwsh
+        run: |
+          $pin = (Get-Content -Raw simtuner/akp153/PIN).Trim()
+          $src = Join-Path $env:RUNNER_TEMP "akp153"
+          git clone --branch cursor/sim-deck-device-name-1e77 --depth 1 https://github.com/alecweinstein/simtuner-deck-akp153.git $src
+          $head = (git -C $src rev-parse HEAD).Trim()
+          if ($head -ne $pin) { throw "AKP153 checkout $head does not match pin $pin" }
+          cargo build --release --manifest-path (Join-Path $src "Cargo.toml")
+          $dest = "simtuner/akp153/st.lynx.plugins.opendeck-akp153.sdPlugin"
+          New-Item -ItemType Directory -Force -Path (Join-Path $dest "assets") | Out-Null
+          Copy-Item (Join-Path $src "manifest.json") $dest
+          Copy-Item (Join-Path $src "assets\*") (Join-Path $dest "assets") -Force
+          Copy-Item (Join-Path $src "NOTICE") $dest
+          Copy-Item (Join-Path $src "CHANGES") $dest
+          Copy-Item (Join-Path $src "target\release\opendeck-akp153.exe") (Join-Path $dest "opendeck-akp153-win.exe")
+          $manifest = Get-Content (Join-Path $dest "manifest.json") -Raw
+          if ($manifest -notmatch '"Name": "Sim Deck"') { throw "AKP153 plugin name is not Sim Deck" }
+          if ($manifest -notmatch '"Version": "0.11.2"') { throw "AKP153 plugin version is not 0.11.2" }
+          if (-not (Test-Path (Join-Path $dest "opendeck-akp153-win.exe"))) { throw "AKP153 Windows binary missing" }
 
       - name: Build NSIS installer
         run: deno task tauri build --bundles nsis
@@ -107,7 +128,7 @@ jobs:
       - name: Upload setup exe
         uses: actions/upload-artifact@v4
         with:
-          name: Sim-Tuner-Deck-setup
+          name: Sim-Deck-setup
           path: ${{ steps.exe.outputs.path }}
           if-no-files-found: error
 
@@ -116,9 +137,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.exe.outputs.path }}
-          name: Sim Tuner Deck ${{ github.ref_name }}
+          name: Sim Deck ${{ github.ref_name }}
           body: |
-            Per-user Windows NSIS setup for Sim Tuner Deck.
+            Per-user Windows NSIS setup for Sim Deck.
             WebView2 bootstrapper is embedded. No device driver is installed.
             The executable is Authenticode-signed only when repository signing secrets are configured.
             Source: https://github.com/alecweinstein/simtuner-deck

@@ -1,6 +1,6 @@
 # Third-party licenses
 
-Sim Tuner Deck is GPL-3.0-or-later. See LICENSE.md and NOTICE.
+Sim Deck is GPL-3.0-or-later. See LICENSE.md and NOTICE.
 
 The host binary links these notable components:
 

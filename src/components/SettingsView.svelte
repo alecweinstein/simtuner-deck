@@ -200,7 +200,7 @@
 
 	<svelte:fragment slot="footer">
 		<p class="mt-4 text-xs text-neutral-400">
-			Sim Tuner Deck is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner, 2026-11-16. Source:
+			Sim Deck is based on OpenDeck by nekename (GPL-3.0-or-later), modified by Sim Tuner, 2026-11-16. Source:
 			<button class="underline" on:click={() => invoke("open_url", { url: "https://github.com/alecweinstein/simtuner-deck" })}
 				>https://github.com/alecweinstein/simtuner-deck</button
 			>
