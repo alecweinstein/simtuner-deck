@@ -319,7 +319,7 @@ async fn main() {
 		Err(error) => panic!("failed to build Tauri application: {}", error),
 	};
 
-	app.run(|app, event| {
+	app.run(|_app, event| {
 		if let tauri::RunEvent::Exit = event {
 			futures::executor::block_on(async {
 				let device_ids = shared::DEVICES.iter().filter(|entry| !entry.id.starts_with("sd-")).map(|entry| entry.id.clone()).collect::<Vec<_>>();
