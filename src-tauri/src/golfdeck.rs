@@ -6,6 +6,7 @@ use std::fs;
 use std::path::Path;
 
 use anyhow::Context;
+use tauri::Manager;
 
 const GOLF_HOME: &str = "Golf Home";
 
