@@ -57,8 +57,26 @@ jobs:
           "name=$($exe.Name)" >> $env:GITHUB_OUTPUT
           Write-Host "Built $($exe.FullName)"
 
+      # secrets cannot appear in step `if`. Record only whether they are set.
+      - name: Detect signing secrets
+        id: signing
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_PROFILE: ${{ secrets.AZURE_SIGNING_PROFILE }}
+        run: |
+          if ($env:WINDOWS_CERTIFICATE) { "pfx=true" >> $env:GITHUB_OUTPUT } else { "pfx=false" >> $env:GITHUB_OUTPUT }
+          if ($env:AZURE_TENANT_ID -and $env:AZURE_CLIENT_ID -and $env:AZURE_SIGNING_ENDPOINT -and $env:AZURE_SIGNING_PROFILE) {
+            "azure=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "azure=false" >> $env:GITHUB_OUTPUT
+          }
+
       - name: Authenticode sign with PFX
-        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        if: steps.signing.outputs.pfx == 'true'
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
@@ -75,7 +93,7 @@ jobs:
           Remove-Item -Force $pfx
 
       - name: Azure Trusted Signing
-        if: ${{ secrets.AZURE_TENANT_ID != '' && secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_SIGNING_ENDPOINT != '' && secrets.AZURE_SIGNING_PROFILE != '' }}
+        if: steps.signing.outputs.azure == 'true'
         uses: azure/trusted-signing-action@v0.5.1
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
