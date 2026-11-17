@@ -10,10 +10,15 @@ use tauri::Manager;
 
 const GOLF_HOME: &str = "Golf Home";
 const GOLF_HOME_FILE: &str = "Golf Home.json";
-/// Bump when the bundled profile pack changes. 1 was Sim Deck 2.14.3 (7 pages). 2 is 2.14.4 (16 pages).
-const PROFILE_SET: u32 = 2;
-/// SHA-256 of the unmodified `Golf Home.json` shipped in Sim Deck 2.14.3.
-const PREVIOUS_GOLF_HOME_SHA256: &[&str] = &["5377c68732941fd617ac262eadb9531e38db06efda4f81f52c07360acc277604"];
+/// Bump when the bundled profile pack changes so devices re-run the sync.
+/// 1 was Sim Deck 2.14.3 (7 pages). 2 was 2.14.4 (byte hash, which never matched a resaved file).
+/// 3 compares Golf Home semantically and fills the new sim keys.
+const PROFILE_SET: u32 = 3;
+/// Unmodified Golf Home shipped in Sim Deck 2.14.3, before OpenDeck re-saves it.
+const GOLF_HOME_V1: &str = include_str!("../assets/golf-home-2.14.3.json");
+const SWITCH_PROFILE_UUID: &str = "com.amansprojects.starterpack.switchprofile";
+/// Profile names that were already on Golf Home in 2.14.3. Newer switch keys are the ones we merge in.
+const V1_HOME_PROFILES: &[&str] = &["GSPro", "PurePlay", "Muni Golf", "Sim Tuner"];
 
 /// Ajazz AKP153, AKP153E (0300:1010), and AKP153E rev. 2 (0300:3010).
 /// The bundled plugin reports these as "Sim Deck". The older Ajazz names still match.
@@ -22,16 +27,16 @@ pub fn is_golf_deck(device: &DeviceInfo) -> bool {
 	device.id.starts_with("99-") && matches!(device.name.as_str(), "Sim Deck" | "Ajazz AKP153" | "Ajazz AKP153E" | "Ajazz AKP153E (rev. 2)")
 }
 
-pub fn seed_if_needed(device: &DeviceInfo) {
+pub async fn seed_if_needed(device: &DeviceInfo) {
 	if !is_golf_deck(device) {
 		return;
 	}
-	if let Err(error) = seed(device) {
+	if let Err(error) = seed(device).await {
 		log::warn!("Golf Deck profile seed skipped for {}: {error:#}", device.id);
 	}
 }
 
-fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
+async fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 	if device.id.contains('/') || device.id.contains('\\') || device.id.contains("..") {
 		anyhow::bail!("refusing to seed profiles for unsafe device id");
 	}
@@ -46,6 +51,7 @@ fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 			return Ok(());
 		}
 		let report = sync_missing_profiles(&dest, &bundled, &device.id)?;
+		forget_loaded_profile(&device.id, GOLF_HOME).await;
 		write_applied_set(&device.id, PROFILE_SET)?;
 		log::info!(
 			"Golf Deck profile set {PROFILE_SET} for {}: added [{}], Golf Home {}",
@@ -94,6 +100,7 @@ fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 	if directory_has_profiles(&dest) {
 		let _ = fs::remove_dir_all(&staging);
 		let report = sync_missing_profiles(&dest, &bundled, &device.id)?;
+		forget_loaded_profile(&device.id, GOLF_HOME).await;
 		write_applied_set(&device.id, PROFILE_SET)?;
 		log::info!(
 			"Golf Deck profiles appeared for {} during seed; added [{}], Golf Home {}",
@@ -108,6 +115,7 @@ fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 	}
 	fs::rename(&staging, &dest)?;
 	select_golf_home(&profiles_root, &device.id, &dest)?;
+	forget_loaded_profile(&device.id, GOLF_HOME).await;
 	write_applied_set(&device.id, PROFILE_SET)?;
 	log::info!("Seeded {copied} Golf Deck profiles for {} and selected {GOLF_HOME}", device.id);
 	Ok(())
@@ -131,23 +139,7 @@ fn sync_missing_profiles(dest: &Path, bundled: &Path, device_id: &str) -> Result
 		let prepared = prepare_profile_bytes(&fs::read(entry.path())?, device_id, &name_str);
 		let target = dest.join(&name);
 		if name_str == GOLF_HOME_FILE {
-			if !target.exists() {
-				fs::write(&target, &prepared)?;
-				added.push(name_str.into_owned());
-				golf_home = "added";
-			} else {
-				let existing = fs::read(&target)?;
-				let hash = sha256_hex(&existing);
-				if hash == sha256_hex(&prepared) {
-					golf_home = "unchanged";
-				} else if PREVIOUS_GOLF_HOME_SHA256.contains(&hash.as_str()) {
-					fs::write(&target, &prepared)?;
-					golf_home = "replaced";
-				} else {
-					golf_home = "kept";
-					log::info!("Leaving Golf Home for {device_id} in place; it does not match a previously bundled copy");
-				}
-			}
+			golf_home = reconcile_golf_home(&target, &prepared, device_id, &mut added, &name_str)?;
 			continue;
 		}
 		if target.exists() {
@@ -158,6 +150,133 @@ fn sync_missing_profiles(dest: &Path, bundled: &Path, device_id: &str) -> Result
 	}
 	added.sort();
 	Ok(SyncReport { added, golf_home })
+}
+
+fn reconcile_golf_home(target: &Path, bundled_bytes: &[u8], device_id: &str, added: &mut Vec<String>, name: &str) -> Result<&'static str, anyhow::Error> {
+	if !target.exists() {
+		fs::write(target, bundled_bytes)?;
+		added.push(name.to_owned());
+		return Ok("added");
+	}
+
+	let existing = fs::read(target)?;
+	let Ok(on_disk) = serde_json::from_slice::<serde_json::Value>(&existing) else {
+		log::warn!("Golf Home for {device_id} is not JSON; leaving it in place");
+		return Ok("kept");
+	};
+	let Ok(bundled) = serde_json::from_slice::<serde_json::Value>(bundled_bytes) else {
+		log::warn!("Bundled Golf Home is not JSON; leaving the on-disk copy in place");
+		return Ok("kept");
+	};
+	let v1 = serde_json::from_str::<serde_json::Value>(GOLF_HOME_V1).context("embedded 2.14.3 Golf Home is not JSON")?;
+
+	if golf_home_matches(&on_disk, &bundled) {
+		return Ok("unchanged");
+	}
+	if golf_home_matches(&on_disk, &v1) {
+		fs::write(target, bundled_bytes)?;
+		log::info!("Replaced Golf Home for {device_id} with the bundled layout; it still matched Sim Deck 2.14.3");
+		return Ok("replaced");
+	}
+
+	let mut merged = on_disk;
+	let positions = merge_new_sim_keys(&mut merged, &bundled);
+	if positions.is_empty() {
+		log::info!("Kept user-edited Golf Home for {device_id}; no empty slots for the new sim keys");
+		return Ok("kept");
+	}
+	rewrite_device_ids(&mut merged, device_id);
+	fs::write(target, serde_json::to_vec_pretty(&merged)?)?;
+	log::info!("Kept user-edited Golf Home for {device_id} and merged new sim keys at positions {positions:?}");
+	Ok("merged")
+}
+
+/// Drop a cached profile so the next load reads the file we just wrote.
+async fn forget_loaded_profile(device_id: &str, profile: &str) {
+	crate::store::profiles::PROFILE_STORES.write().await.remove_profile(device_id, profile);
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct SlotSig {
+	uuid: String,
+	profile: String,
+	down: String,
+	up: String,
+	children: usize,
+}
+
+fn golf_home_matches(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+	slot_signatures(left, "keys") == slot_signatures(right, "keys")
+		&& slot_signatures(left, "sliders") == slot_signatures(right, "sliders")
+		&& slot_signatures(left, "infobars") == slot_signatures(right, "infobars")
+}
+
+fn slot_signatures(profile: &serde_json::Value, field: &str) -> Vec<Option<SlotSig>> {
+	let Some(slots) = profile.get(field).and_then(|value| value.as_array()) else {
+		return Vec::new();
+	};
+	let mut signatures: Vec<Option<SlotSig>> = slots.iter().map(slot_signature).collect();
+	while signatures.last().is_some_and(|slot| slot.is_none()) {
+		signatures.pop();
+	}
+	signatures
+}
+
+fn slot_signature(slot: &serde_json::Value) -> Option<SlotSig> {
+	let uuid = slot.get("action").and_then(|action| action.get("uuid")).and_then(|uuid| uuid.as_str()).unwrap_or("").trim();
+	if uuid.is_empty() {
+		return None;
+	}
+	let settings = slot.get("settings").cloned().unwrap_or(serde_json::Value::Null);
+	Some(SlotSig {
+		uuid: uuid.to_owned(),
+		profile: setting_text(&settings, "profile"),
+		down: setting_text(&settings, "down"),
+		up: setting_text(&settings, "up"),
+		children: slot.get("children").and_then(|children| children.as_array()).map(|children| children.len()).unwrap_or(0),
+	})
+}
+
+fn setting_text(settings: &serde_json::Value, key: &str) -> String {
+	match settings.get(key) {
+		Some(serde_json::Value::String(text)) => text.trim().to_owned(),
+		Some(serde_json::Value::Null) | None => String::new(),
+		Some(other) => other.to_string(),
+	}
+}
+
+fn is_empty_slot(slot: &serde_json::Value) -> bool {
+	slot_signature(slot).is_none()
+}
+
+fn is_new_sim_switch(slot: &serde_json::Value) -> bool {
+	let Some(sig) = slot_signature(slot) else {
+		return false;
+	};
+	sig.uuid == SWITCH_PROFILE_UUID && !sig.profile.is_empty() && !V1_HOME_PROFILES.contains(&sig.profile.as_str())
+}
+
+/// Copy bundled Switch Profile keys for sims that were not on the 2.14.3 Golf Home into slots the user left empty.
+fn merge_new_sim_keys(user: &mut serde_json::Value, bundled: &serde_json::Value) -> Vec<usize> {
+	let Some(bundled_keys) = bundled.get("keys").and_then(|keys| keys.as_array()) else {
+		return Vec::new();
+	};
+	if !user.get("keys").is_some_and(|keys| keys.is_array()) {
+		user["keys"] = serde_json::json!([]);
+	}
+	let user_keys = user.get_mut("keys").and_then(|keys| keys.as_array_mut()).unwrap();
+	while user_keys.len() < bundled_keys.len() {
+		user_keys.push(serde_json::Value::Null);
+	}
+	let mut positions = Vec::new();
+	for (index, bundled_slot) in bundled_keys.iter().enumerate() {
+		if !is_empty_slot(&user_keys[index]) || !is_new_sim_switch(bundled_slot) {
+			continue;
+		}
+		user_keys[index] = bundled_slot.clone();
+		positions.push(index);
+	}
+	positions
 }
 
 fn prepare_profile_bytes(bytes: &[u8], device_id: &str, name: &str) -> Vec<u8> {
@@ -174,11 +293,6 @@ fn prepare_profile_bytes(bytes: &[u8], device_id: &str, name: &str) -> Vec<u8> {
 			bytes.to_vec()
 		}
 	}
-}
-
-fn sha256_hex(bytes: &[u8]) -> String {
-	use sha2::{Digest, Sha256};
-	Sha256::digest(bytes).iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 fn seed_state_path() -> std::path::PathBuf {
@@ -366,9 +480,65 @@ mod tests {
 		assert!(!is_golf_deck(&other));
 	}
 
+	fn resaved_v1_golf_home() -> serde_json::Value {
+		let mut home: serde_json::Value = serde_json::from_str(GOLF_HOME_V1).unwrap();
+		rewrite_device_ids(&mut home, "99-355499441494-153E");
+		let state = &mut home["keys"][0]["states"][0];
+		state["opendeck_extra"] = serde_json::json!(true);
+		state["background_colour"] = serde_json::json!("#000000");
+		home["keys"][0]["settings"]["device"] = serde_json::json!("99-355499441494-153E");
+		home
+	}
+
 	#[test]
-	fn sha256_matches_known_vector() {
-		assert_eq!(sha256_hex(b"abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+	fn resaved_v1_golf_home_is_replaced() {
+		let root = std::env::temp_dir().join(format!("simdeck-seed-replace-{}", std::process::id()));
+		let _ = fs::remove_dir_all(&root);
+		let bundled = root.join("bundled");
+		let dest = root.join("device");
+		fs::create_dir_all(&bundled).unwrap();
+		fs::create_dir_all(&dest).unwrap();
+		let v2 = br#"{"keys":[{"action":{"uuid":"com.amansprojects.starterpack.switchprofile"},"settings":{"profile":"Awesome Golf"}}]}"#;
+		fs::write(bundled.join("Golf Home.json"), v2).unwrap();
+		fs::write(bundled.join("Awesome Golf.json"), br#"{"page":"awesome"}"#).unwrap();
+		fs::write(dest.join("Golf Home.json"), serde_json::to_vec_pretty(&resaved_v1_golf_home()).unwrap()).unwrap();
+		fs::write(dest.join("GSPro.json"), br#"{"page":"kept"}"#).unwrap();
+
+		let report = sync_missing_profiles(&dest, &bundled, "99-355499441494-153E").unwrap();
+		assert_eq!(report.golf_home, "replaced");
+		assert_eq!(fs::read(dest.join("Golf Home.json")).unwrap(), v2);
+		assert_eq!(fs::read(dest.join("Awesome Golf.json")).unwrap(), br#"{"page":"awesome"}"#);
+		assert_eq!(fs::read(dest.join("GSPro.json")).unwrap(), br#"{"page":"kept"}"#);
+		assert!(report.added.iter().any(|name| name == "Awesome Golf.json"));
+		let _ = fs::remove_dir_all(&root);
+	}
+
+	#[test]
+	fn edited_golf_home_is_kept_and_gains_new_sim_keys() {
+		let root = std::env::temp_dir().join(format!("simdeck-seed-merge-{}", std::process::id()));
+		let _ = fs::remove_dir_all(&root);
+		let bundled = root.join("bundled");
+		let dest = root.join("device");
+		fs::create_dir_all(&bundled).unwrap();
+		fs::create_dir_all(&dest).unwrap();
+		let mut edited = resaved_v1_golf_home();
+		edited["keys"][0]["settings"]["profile"] = serde_json::json!("Custom Page");
+		fs::write(dest.join("Golf Home.json"), serde_json::to_vec_pretty(&edited).unwrap()).unwrap();
+
+		let v2: serde_json::Value = serde_json::from_str(include_str!("../../simtuner/profiles/Golf Home.json")).unwrap();
+		fs::write(bundled.join("Golf Home.json"), serde_json::to_vec(&v2).unwrap()).unwrap();
+		fs::write(bundled.join("Infinite Tees.json"), br#"{"page":"tees"}"#).unwrap();
+
+		let report = sync_missing_profiles(&dest, &bundled, "99-355499441494-153E").unwrap();
+		assert_eq!(report.golf_home, "merged");
+		let saved: serde_json::Value = serde_json::from_slice(&fs::read(dest.join("Golf Home.json")).unwrap()).unwrap();
+		assert_eq!(saved["keys"][0]["settings"]["profile"], "Custom Page");
+		assert_eq!(saved["keys"][4]["settings"]["profile"], "Awesome Golf");
+		assert_eq!(saved["keys"][6]["settings"]["profile"], "TGC 2019");
+		assert_eq!(saved["keys"][10]["settings"]["profile"], "Infinite Tees");
+		assert!(saved["keys"][5].is_null());
+		assert!(dest.join("Infinite Tees.json").is_file());
+		let _ = fs::remove_dir_all(&root);
 	}
 
 	#[test]
@@ -382,13 +552,16 @@ mod tests {
 		fs::write(bundled.join("Golf Home.json"), br#"{"keys":["new-home"]}"#).unwrap();
 		fs::write(bundled.join("Awesome Golf.json"), br#"{"keys":["awesome"]}"#).unwrap();
 		fs::write(bundled.join("GSPro.json"), br#"{"keys":["gspro-new"]}"#).unwrap();
-		fs::write(dest.join("Golf Home.json"), br#"{"keys":["user-edited"]}"#).unwrap();
+		fs::write(dest.join("Golf Home.json"), br#"{"keys":[{"action":{"uuid":"custom.action"},"settings":{"profile":"Nope"}}]}"#).unwrap();
 		fs::write(dest.join("GSPro.json"), br#"{"keys":["user-gspro"]}"#).unwrap();
 
 		let report = sync_missing_profiles(&dest, &bundled, "99-TEST").unwrap();
 		assert_eq!(report.added, vec!["Awesome Golf.json".to_owned()]);
 		assert_eq!(report.golf_home, "kept");
-		assert_eq!(fs::read(dest.join("Golf Home.json")).unwrap(), br#"{"keys":["user-edited"]}"#);
+		assert_eq!(
+			fs::read(dest.join("Golf Home.json")).unwrap(),
+			br#"{"keys":[{"action":{"uuid":"custom.action"},"settings":{"profile":"Nope"}}]}"#
+		);
 		assert_eq!(fs::read(dest.join("GSPro.json")).unwrap(), br#"{"keys":["user-gspro"]}"#);
 		assert_eq!(fs::read(dest.join("Awesome Golf.json")).unwrap(), br#"{"keys":["awesome"]}"#);
 		let _ = fs::remove_dir_all(&root);

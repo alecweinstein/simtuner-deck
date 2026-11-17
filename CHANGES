@@ -1,3 +1,5 @@
+Sim Deck 2.14.5 compares Golf Home by key action and settings, not file bytes, so a 2.14.3 page that OpenDeck re-saved is still replaced with the 16-page Golf Home. A page the user actually edited is kept, and new sim Switch Profile keys are copied into its empty slots. Profile set 3 forces devices that already ran the 2.14.4 sync to run again.
+
 Sim Deck 2.14.4 replaces the bundled Golf Deck profiles and key icons with golfdeck-assets-v2 (16 pages). Profile seeding records a profile-set version per device. An install that already has profiles from 2.14.3 gains any bundled page that is missing. Golf Home is overwritten only when its bytes match the 2.14.3 bundled file (SHA-256 5377c68732941fd617ac262eadb9531e38db06efda4f81f52c07360acc277604). Strip plugin binaries are unchanged.
 
 Sim Deck modifications to OpenDeck
