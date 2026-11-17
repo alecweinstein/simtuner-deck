@@ -9,6 +9,11 @@ use anyhow::Context;
 use tauri::Manager;
 
 const GOLF_HOME: &str = "Golf Home";
+const GOLF_HOME_FILE: &str = "Golf Home.json";
+/// Bump when the bundled profile pack changes. 1 was Sim Deck 2.14.3 (7 pages). 2 is 2.14.4 (16 pages).
+const PROFILE_SET: u32 = 2;
+/// SHA-256 of the unmodified `Golf Home.json` shipped in Sim Deck 2.14.3.
+const PREVIOUS_GOLF_HOME_SHA256: &[&str] = &["5377c68732941fd617ac262eadb9531e38db06efda4f81f52c07360acc277604"];
 
 /// Ajazz AKP153, AKP153E (0300:1010), and AKP153E rev. 2 (0300:3010).
 /// The bundled plugin reports these as "Sim Deck". The older Ajazz names still match.
@@ -33,12 +38,24 @@ fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 
 	let profiles_root = config_dir().join("profiles");
 	let dest = profiles_root.join(&device.id);
+	let bundled = bundled_profile_dir()?;
+	let applied = read_applied_set(&device.id);
 	if directory_has_profiles(&dest) {
-		log::info!("Golf Deck profiles already present for {}; leaving them untouched", device.id);
+		if applied >= PROFILE_SET {
+			log::info!("Golf Deck profile set {PROFILE_SET} already applied for {}", device.id);
+			return Ok(());
+		}
+		let report = sync_missing_profiles(&dest, &bundled, &device.id)?;
+		write_applied_set(&device.id, PROFILE_SET)?;
+		log::info!(
+			"Golf Deck profile set {PROFILE_SET} for {}: added [{}], Golf Home {}",
+			device.id,
+			report.added.join(", "),
+			report.golf_home
+		);
 		return Ok(());
 	}
 
-	let bundled = bundled_profile_dir()?;
 	let staging = profiles_root.join(format!(".{}.golfdeck-seed", device.id));
 	let _ = fs::remove_dir_all(&staging);
 	fs::create_dir_all(&staging)?;
@@ -76,7 +93,14 @@ fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 	// Re-check so a profile saved while we were copying is not replaced.
 	if directory_has_profiles(&dest) {
 		let _ = fs::remove_dir_all(&staging);
-		log::info!("Golf Deck profiles appeared for {} during seed; leaving them untouched", device.id);
+		let report = sync_missing_profiles(&dest, &bundled, &device.id)?;
+		write_applied_set(&device.id, PROFILE_SET)?;
+		log::info!(
+			"Golf Deck profiles appeared for {} during seed; added [{}], Golf Home {}",
+			device.id,
+			report.added.join(", "),
+			report.golf_home
+		);
 		return Ok(());
 	}
 	if dest.exists() {
@@ -84,7 +108,105 @@ fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 	}
 	fs::rename(&staging, &dest)?;
 	select_golf_home(&profiles_root, &device.id, &dest)?;
+	write_applied_set(&device.id, PROFILE_SET)?;
 	log::info!("Seeded {copied} Golf Deck profiles for {} and selected {GOLF_HOME}", device.id);
+	Ok(())
+}
+
+struct SyncReport {
+	added: Vec<String>,
+	golf_home: &'static str,
+}
+
+fn sync_missing_profiles(dest: &Path, bundled: &Path, device_id: &str) -> Result<SyncReport, anyhow::Error> {
+	fs::create_dir_all(dest)?;
+	let mut added = Vec::new();
+	let mut golf_home = "unchanged";
+	for entry in fs::read_dir(bundled).with_context(|| format!("reading {}", bundled.display()))?.flatten() {
+		let name = entry.file_name();
+		let name_str = name.to_string_lossy();
+		if !name_str.ends_with(".json") || !entry.file_type().is_ok_and(|kind| kind.is_file()) {
+			continue;
+		}
+		let prepared = prepare_profile_bytes(&fs::read(entry.path())?, device_id, &name_str);
+		let target = dest.join(&name);
+		if name_str == GOLF_HOME_FILE {
+			if !target.exists() {
+				fs::write(&target, &prepared)?;
+				added.push(name_str.into_owned());
+				golf_home = "added";
+			} else {
+				let existing = fs::read(&target)?;
+				let hash = sha256_hex(&existing);
+				if hash == sha256_hex(&prepared) {
+					golf_home = "unchanged";
+				} else if PREVIOUS_GOLF_HOME_SHA256.contains(&hash.as_str()) {
+					fs::write(&target, &prepared)?;
+					golf_home = "replaced";
+				} else {
+					golf_home = "kept";
+					log::info!("Leaving Golf Home for {device_id} in place; it does not match a previously bundled copy");
+				}
+			}
+			continue;
+		}
+		if target.exists() {
+			continue;
+		}
+		fs::write(&target, prepared)?;
+		added.push(name_str.into_owned());
+	}
+	added.sort();
+	Ok(SyncReport { added, golf_home })
+}
+
+fn prepare_profile_bytes(bytes: &[u8], device_id: &str, name: &str) -> Vec<u8> {
+	match serde_json::from_slice::<serde_json::Value>(bytes) {
+		Ok(mut value) => {
+			if rewrite_device_ids(&mut value, device_id) {
+				serde_json::to_vec_pretty(&value).unwrap_or_else(|_| bytes.to_vec())
+			} else {
+				bytes.to_vec()
+			}
+		}
+		Err(error) => {
+			log::warn!("Bundled profile {name} is not JSON ({error}); copying bytes unchanged");
+			bytes.to_vec()
+		}
+	}
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+	use sha2::{Digest, Sha256};
+	Sha256::digest(bytes).iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+fn seed_state_path() -> std::path::PathBuf {
+	config_dir().join("golfdeck-seed.json")
+}
+
+fn read_applied_set(device_id: &str) -> u32 {
+	let Ok(bytes) = fs::read(seed_state_path()) else {
+		return 0;
+	};
+	let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
+		return 0;
+	};
+	value.get("devices").and_then(|devices| devices.get(device_id)).and_then(|version| version.as_u64()).unwrap_or(0) as u32
+}
+
+fn write_applied_set(device_id: &str, set: u32) -> Result<(), anyhow::Error> {
+	let path = seed_state_path();
+	let mut root = fs::read(&path)
+		.ok()
+		.and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+		.unwrap_or_else(|| serde_json::json!({ "devices": {} }));
+	if !root.get("devices").is_some_and(|devices| devices.is_object()) {
+		root["devices"] = serde_json::json!({});
+	}
+	root["devices"][device_id] = serde_json::json!(set);
+	root["profile_set"] = serde_json::json!(PROFILE_SET);
+	fs::write(&path, serde_json::to_string_pretty(&root)? + "\n")?;
 	Ok(())
 }
 
@@ -242,5 +364,53 @@ mod tests {
 		let mut other = deck("Ajazz AKP153E");
 		other.id = "sd-123".to_owned();
 		assert!(!is_golf_deck(&other));
+	}
+
+	#[test]
+	fn sha256_matches_known_vector() {
+		assert_eq!(sha256_hex(b"abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+	}
+
+	#[test]
+	fn upgrade_adds_missing_profiles_and_keeps_modified_golf_home() {
+		let root = std::env::temp_dir().join(format!("simdeck-seed-{}", std::process::id()));
+		let _ = fs::remove_dir_all(&root);
+		let bundled = root.join("bundled");
+		let dest = root.join("device");
+		fs::create_dir_all(&bundled).unwrap();
+		fs::create_dir_all(&dest).unwrap();
+		fs::write(bundled.join("Golf Home.json"), br#"{"keys":["new-home"]}"#).unwrap();
+		fs::write(bundled.join("Awesome Golf.json"), br#"{"keys":["awesome"]}"#).unwrap();
+		fs::write(bundled.join("GSPro.json"), br#"{"keys":["gspro-new"]}"#).unwrap();
+		fs::write(dest.join("Golf Home.json"), br#"{"keys":["user-edited"]}"#).unwrap();
+		fs::write(dest.join("GSPro.json"), br#"{"keys":["user-gspro"]}"#).unwrap();
+
+		let report = sync_missing_profiles(&dest, &bundled, "99-TEST").unwrap();
+		assert_eq!(report.added, vec!["Awesome Golf.json".to_owned()]);
+		assert_eq!(report.golf_home, "kept");
+		assert_eq!(fs::read(dest.join("Golf Home.json")).unwrap(), br#"{"keys":["user-edited"]}"#);
+		assert_eq!(fs::read(dest.join("GSPro.json")).unwrap(), br#"{"keys":["user-gspro"]}"#);
+		assert_eq!(fs::read(dest.join("Awesome Golf.json")).unwrap(), br#"{"keys":["awesome"]}"#);
+		let _ = fs::remove_dir_all(&root);
+	}
+
+	#[test]
+	fn upgrade_leaves_golf_home_when_it_already_matches_the_bundle() {
+		let root = std::env::temp_dir().join(format!("simdeck-seed-same-{}", std::process::id()));
+		let _ = fs::remove_dir_all(&root);
+		let bundled = root.join("bundled");
+		let dest = root.join("device");
+		fs::create_dir_all(&bundled).unwrap();
+		fs::create_dir_all(&dest).unwrap();
+		let home = br#"{"page":"golf-home-v2"}"#;
+		fs::write(bundled.join("Golf Home.json"), home).unwrap();
+		fs::write(dest.join("Golf Home.json"), home).unwrap();
+		fs::write(bundled.join("Infinite Tees.json"), br#"{"page":"tees"}"#).unwrap();
+
+		let report = sync_missing_profiles(&dest, &bundled, "99-TEST").unwrap();
+		assert_eq!(report.golf_home, "unchanged");
+		assert_eq!(report.added, vec!["Infinite Tees.json".to_owned()]);
+		assert_eq!(fs::read(dest.join("Golf Home.json")).unwrap(), home);
+		let _ = fs::remove_dir_all(&root);
 	}
 }

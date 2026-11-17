@@ -166,6 +166,147 @@ The desktop app serves a local HTTP API that its own UI uses (`/api/swing/trigge
 
 ---
 
+
+---
+
+## Awesome Golf (insights.awesome-golf.com) — official
+
+Windows only. There are **no documented club up/down, tee-move, or hold-to-fast-forward keys**. Left and Right arrows aim in Virtual Golf, Approach Shots, Closest to the Pin, and Target Golf; in Shot-by-Shot and Coaching the same keys go to the previous or next shot. Mulligan (**M**) is Virtual Golf only. **Space** stops the auto-countdown; it is a tap, not a hold. "Any key" skip-replay / skip-fly-in is not bound, because it would fire whatever key we picked.
+
+Source: [In-Game Key Mappings & Hotkeys](https://insights.awesome-golf.com/docs/reference/key-mappings/keyboard)
+
+### Page 1 — `Awesome Golf.json`
+
+| Action | Key | On the pad? | Simulate Input | Status |
+|---|---|---|---|---|
+| Mulligan (Virtual Golf only) | M | Page 1 | `[k(uni('m'),c)]` | Official |
+| Replay | R | Page 1 | `[k(uni('r'),c)]` | Official |
+| Switch Player | S | Page 1 | `[k(uni('s'),c)]` | Official |
+| Cycle Camera | C | Page 1 | `[k(uni('c'),c)]` | Official (Shot-by-Shot / Club Distances) |
+| Cycle View | V | Page 1 | `[k(uni('v'),c)]` | Official (Shot-by-Shot Overview / Detail) |
+| Aim Left / Right | ← / → | Page 1 (hold) | `[k(LeftArrow,c)]` / `[k(RightArrow,c)]` | Official |
+| Cycle Firmness | F | Page 1 | `[k(uni('f'),c)]` | Official (Approach / Shot-by-Shot) |
+| Stop Auto-Countdown | Space | Page 1 (click) | `[k(Space,c)]` | Official |
+| Toggle Audio | A | Page 1 | `[k(uni('a'),c)]` | Official |
+| Dismiss | Esc | Page 1 | `[k(Escape,c)]` | Official (also dismisses Switch Player) |
+| Continue | Enter | Page 1 | `[k(Return,c)]` | Official (Dismiss/Continue; also Match Status Continue) |
+| Skip Replay / Skip Hole Fly-in | Any key | No | — | Official; not bound |
+| Previous / Next Shot | ← / → | No (same keys as aim) | — | Official in Shot-by-Shot and Coaching |
+| Re-take / Delete Shot | Delete | No | `[k(Delete,c)]` | Official in Club Distances / Coaching; not bound |
+
+One page is enough, so this profile has no page 2. Golf Home is on the bottom-right key.
+
+---
+
+## TGC 2019 (The Golf Club) — official
+
+There is **no direct mulligan key**. **Rewind Shot** (take a mulligan) is an item in the pause menu (**Esc** or **M**). **R** toggles Auto-Rewind, which the official guide describes as auto-mulligan and useful for practice. There are no documented tee-move or hold-to-fast-forward keys. **J** is a second flyover binding and is omitted so it does not duplicate **H**.
+
+Quick club select (**`** driver, **1**–**9**, **0**, **-**, **=**, **P**) and **Alt+Enter** (windowed mode) are documented on 247.golf's help article, not in the ProTee user-guide table. **Putter** is on page 1 from that list; only **Driver** was added as a quick-select on page 2. The other numbered clubs are documented but not bound.
+
+Sources:
+
+- [TGC2019 Sim User Guide — ProTee Customer Support](https://csc.protee-united.com/hc/en-us/articles/360015650600-TGC2019-Sim-User-Guide)
+- [TGC 2019 Keyboard Shortcuts — 247.golf Help](https://help.247.golf/en-US/tgc-2019-keyboard-shortcuts-774064)
+
+### Page 1 — `TGC 2019.json`
+
+| Action | Key | On the pad? | Simulate Input | Status |
+|---|---|---|---|---|
+| Club Down | Z | Page 1 | `[k(uni('z'),c)]` | Official (also moves the ball in drop mode) |
+| Club Up | X | Page 1 | `[k(uni('x'),c)]` | Official (also moves the ball in drop mode) |
+| Putter | P | Page 1 | `[k(uni('p'),c)]` | 247.golf |
+| Flyover | H | Page 1 | `[k(uni('h'),c)]` | Official (**J** is the same flyover, not bound) |
+| Scout Camera | Q | Page 1 | `[k(uni('q'),c)]` | Official |
+| Aim Left / Right | ← / → (also A / D) | Page 1 (hold) | `[k(LeftArrow,c)]` / `[k(RightArrow,c)]` | Official |
+| Aim Forward / Back | ↑ / ↓ (also W / S while putting) | Page 1 (hold) | `[k(UpArrow,c)]` / `[k(DownArrow,c)]` | Official, putting |
+| Aerial View | E | Page 1 | `[k(uni('e'),c)]` | Official (also places the ball in practice) |
+| Auto-Rewind | R | Page 1 | `[k(uni('r'),c)]` | Official |
+| Green Grid | G | Page 1 | `[k(uni('g'),c)]` | Official (putting section; 247.golf also lists it generally) |
+| Shot Information | I | Page 1 | `[k(uni('i'),c)]` | Official |
+| Menu / Pause | Esc (also M) | Page 1 | `[k(Escape,c)]` | Official; use this to reach Rewind Shot |
+
+### Page 2 — `TGC 2019 2.json`
+
+| Action | Key | On the pad? | Simulate Input | Status |
+|---|---|---|---|---|
+| Hole Data | C | Page 2 | `[k(uni('c'),c)]` | Official |
+| Lie Grid | L | Page 2 | `[k(uni('l'),c)]` | Official |
+| Remove Flag | F | Page 2 | `[k(uni('f'),c)]` | Official (off the green only) |
+| Cycle View | V | Page 2 | `[k(uni('v'),c)]` | Official |
+| Driver | ` (backtick) | Page 2 | `[k(uni('`'),c)]` | 247.golf |
+| Move Ball Forward / Back | W / S | Page 2 | `[k(uni('w'),c)]` / `[k(uni('s'),c)]` | Official, drop / unplayable mode (same keys also aim the putting pole) |
+| Drop / Advance | Enter | Page 2 | `[k(Return,c)]` | Official (drop; 247.golf also lists advance when holed out) |
+| Windowed Mode | Alt+Enter | Page 2 | `[k(alt,p),k(Return,c),k(alt,r)]` | 247.golf |
+
+---
+
+## ProTee Play — official
+
+This is ProTee's own older sim, **not** Beacon Games PurePlay. There are **no documented mulligan, club up/down cycle, tee-move, up/down aim, or fast-forward keys**. Club changes are by family or by a specific club key. **D** toggles driver and woods; **W** cycles lob / sand / pitching wedge; **H** toggles hybrids.
+
+Source: [ProTee Play Keyboard Shortcuts](https://csc.protee-united.com/hc/en-us/articles/360000056133-ProTee-Play-Keyboard-Shortcuts)
+
+### Page 1 — `ProTee Play.json`
+
+| Action | Key | On the pad? | Simulate Input | Status |
+|---|---|---|---|---|
+| Putter | P | Page 1 | `[k(uni('p'),c)]` | Official |
+| Toggle Driver / Woods | D | Page 1 | `[k(uni('d'),c)]` | Official |
+| Toggle Hybrids | H | Page 1 | `[k(uni('h'),c)]` | Official |
+| Cycle Wedges | W | Page 1 | `[k(uni('w'),c)]` | Official (lob / sand / pitching) |
+| Sand Wedge | S | Page 1 | `[k(uni('s'),c)]` | Official |
+| Aim Left / Right | ← / → | Page 1 (hold) | `[k(LeftArrow,c)]` / `[k(RightArrow,c)]` | Official |
+| Pitching Wedge | 0 | Page 1 | `[k(uni('0'),c)]` | Official |
+| Clear Tracers | C | Page 1 | `[k(uni('c'),c)]` | Official |
+| Last Shot Data | I | Page 1 | `[k(uni('i'),c)]` | Official |
+
+### Page 2 — `ProTee Play 2.json`
+
+| Action | Key | On the pad? | Simulate Input | Status |
+|---|---|---|---|---|
+| Iron 1–9 | 1–9 | Page 2 | `[k(uni('1'),c)]` … `[k(uni('9'),c)]` | Official |
+
+---
+
+## Creative Golf 3D / Creative Golf Advanced — official
+
+The current Creative Golf Advanced user manual (v3.2.005, 2026) documents three keyboard shortcuts: **F** show flag, **M** mulligan, **X** skip player. Left and Right arrows for view rotation appear in the official 2019 Foresight/Datacrea v2.5 manual, when Game Option 2 "View direction handling" is set to the directional-arrow icon. Later manuals (SkyTrak v2.8, 2021, and the 2026 Advanced manual's aiming chapter) describe aiming as click or touch and no longer mention those arrows, so they may depend on version or that older setting. There are **no documented club up/down, tee-move, or fast-forward keys**. Replay, scorecard, hole view, and drop are menu / on-screen icons, not published key bindings.
+
+Sources:
+
+- [Creative Golf Advanced / Golfisimo User Manual v3.2.005](https://www.creativegolf3d.com/setups/manual/Creative%20Golf%20Advanced%20Manual.pdf) (SHORTCUTS section: F, M, X)
+- [Creative Golf 3D and Golfisimo User Manual v2.5 for Foresight GC2, November 2019](https://20033507.fs1.hubspotusercontent-na1.net/hubfs/20033507/Product%20Documents/Software/Creative%20Golf%203D%20manual%20Foresight%20Sports%20GC2.pdf) (left/right arrows for rotation)
+
+### Page 1 — `Creative Golf.json`
+
+| Action | Key | On the pad? | Simulate Input | Status |
+|---|---|---|---|---|
+| Mulligan | M | Page 1 | `[k(uni('m'),c)]` | Official, 2026 Advanced manual |
+| Show Flag | F | Page 1 | `[k(uni('f'),c)]` | Official, 2026 Advanced manual |
+| Skip Player | X | Page 1 | `[k(uni('x'),c)]` | Official, 2026 Advanced manual |
+| Aim / Rotate Left / Right | ← / → | Page 1 (hold) | `[k(LeftArrow,c)]` / `[k(RightArrow,c)]` | Official in the 2019 v2.5 manual; confirm on your build |
+
+One page is enough, so this profile has no page 2.
+
+---
+
+## Sims researched but not added
+
+None of these have a published in-round keyboard map that is complete and current enough to bind without inventing keys.
+
+| Sim | Why it was skipped | Sources |
+|---|---|---|
+| Foresight FSX Play | The official Play manual describes a clickable Shortcuts Bar (Bird's Eye, Mulligan, Grid, and so on) but does **not** list key assignments. A Keyboard Shortcuts window was added in [FSX Play v1.1.0.6](https://support.foresightsports.com/support/software/fsx-play); forum users say **K** opens it and that it looks like the FSX 2020 list, but also that several keys were non-operational and that Mulligan was missing in some Play builds. | [FSX Play User Manual](https://support.foresightsports.com/fsx-play-user-manual); [FSXPLAY Keyboard Shortcuts thread](https://golfsimulatorforum.com/forum/foresight-sports/367866-fsxplay-keyboard-shortcuts); [Practice / shortcuts thread](https://golfsimulatorforum.com/forum/foresight-sports/373608-does-fsx-play-contain-a-practice-button-shortcuts) |
+| Foresight FSX 2020 | Official manual documents **I** for Analysis and arrow keys to move a drop, and the rest of the in-round actions as Shortcuts Bar clicks. Forum reports say **Down Arrow** became Mulligan in a September 2020 release, which already differs from the older 2018 list. Binding the 2018 keys on 2020/Play would be guesswork. | [FSX 2020 User Manual](https://support.foresightsports.com/fsx-2020-user-manual); [FSX: Keyboard Shortcuts thread](https://golfsimulatorforum.com/forum/foresight-sports/288634-fsx-keyboard-shortcuts) |
+| Foresight FSX 2018 | An official hot-key PDF does exist (**E** bird's eye, **F** flag, **G** grid, **H** hole flyby, **I** analysis, **R** replays, **C** club, **K** shortcuts, and others), but this is the older product, not what most people run now, so it was not added as a profile. | [FSX 2018 Keyboard Shortcuts PDF](https://support.foresightsports.com/sites/default/files/downloads/2021/FSX%202018%20Keyboard%20Shortcuts.pdf) |
+| Foresight FSX Pro Studio | Coaching / fitting software. The official manual is mouse-driven (click club groups, tiles, and toolbar). No gameplay keyboard map. | [FSX Pro Studio User Manual](https://support.foresightsports.com/fsx-pro-studio-user-manual) |
+| E6 Connect | Official manual describes mouse and touch (club button, mini-map aim, on-screen Mulligan). No official keyboard-shortcut list. Third-party device guides sometimes mention **C** / **V**, but those are not from E6. | [E6 Connect Manual](https://connect.e6golf.com/e6-connect/manual/) |
+| Uneekor VIEW / REFINE | Official help and manuals describe on-screen modes and display settings, not keys. A 2020 forum post said older Refine showed hotkeys on screen, and linked a 2019 QED in-game manual that is now a dead 404, with no archived copy found. | [Uneekor software overview](https://support.uneekor.com/knowledge/what-uneekor-software-are-available); [Uneekor Ignite and Refine hot keys thread](https://golfsimulatorforum.com/forum/golf-simulator-brands-and-types/uneekor-qed/278753-uneekor-ignite-and-refine-hot-keys) |
+| Trackman Virtual Golf (VG2 / VG3 in TPS) | Official mulligan help is click-only (player-score dropdown in VG3, on-screen button in VG2). Aim and club select are screen / mini-map clicks. The official TPS keyboard-shortcut article is for navigating TPS without a mouse, not in-round VG play, and the key list is an image that was not transcribed into the article text. | [Mulligans in VG2 and VG3](https://support.trackmangolf.com/hc/en-us/articles/30834967923612-Courses-Mulligans-in-VG2-and-VG3); [TPS keyboard shortcuts](https://support.trackmangolf.com/hc/en-us/articles/37008938200731-TPS-List-Of-Keyboard-Shortcuts-In-TPS) |
+| Golfzon | Commercial bay software (Golfzon Real / Vision) has some keys in Korean or Japanese materials (**F2** flyover, **F12** cancel shot). Consumer Golfzon WAVE's English support only documents left/right arrows to change distance in Approach Practice and Putting Arena, which is not a full play map. | [Golfzon WAVE support](https://golfzonwave.co.uk/pages/suppport); [Golfzon Real shortcuts (Korean)](https://story.golfzon.com/65) |
+| Full Swing Kit / Studio | Official user guides describe a MENU tab and on-screen Replay / Mulligan / Camera / Top View controls. No keyboard-shortcut list was found. | [Full Swing user guides](https://fullswinggolf.my.site.com/support/s/userguides) |
+
 ## Built-in OpenDeck actions used
 
 From the Starter Pack manifest (`plugins/com.amansprojects.starterpack.sdPlugin/assets/manifest.json`) and OpenDeck itself (`src-tauri/src/shared.rs`):
@@ -181,3 +322,15 @@ From the Starter Pack manifest (`plugins/com.amansprojects.starterpack.sdPlugin/
 | Toggle Action (built-in) | `opendeck.toggleaction` | Available; not used |
 
 There is no built-in "folder" action. Profiles plus Switch Profile are the documented substitute ([OpenDeck FAQ](https://github.com/nekename/OpenDeck/wiki/0.-FAQ)).
+
+## FSX Play
+Source: FSX Play in-game Keyboard Shortcuts screen (photo from Alec, Nov 17, 2026).
+- Page 1: Bird's Eye E, Flag F, Grid G, Hole Flyby H, Periscope Up (hold) | Previous Hole `,`, Next Hole `.`, Replays R, Analysis I, Hole Review Q | Club menu C, Ball menu B, Practice P, Exit to Menu Esc, MORE
+- Page 2: Course Flyby Alt+H, Drop Balls Alt+G, View menu V, Dashboard M, Shortcuts O | On-Screen Data N, Graphics S, Swing Cam W, Dual Display Z, Devices D | Keyboard Shortcuts K, Language U, HOME, BACK
+- No mulligan, club up/down, aim, tee or fast-forward keys are listed.
+
+## Infinite Tees
+Source: Alec's hotkey list (Nov 17, 2026); aim arrows from RoomCaddie docs (needs IT Side Screen on). Hotkeys are remappable in IT Settings.
+- Row 1: Aim Left (hold ←), Aim Point F3, Flyover F4, Heat Map Y, Aim Right (hold →)
+- Row 2: FOV 1–4 (Ctrl+1..4)
+- Row 3: Eye Height 1–4 (Alt+1..4), HOME

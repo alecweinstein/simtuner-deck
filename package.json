@@ -1,5 +1,6 @@
 {
 	"name": "sim-deck",
+	"version": "2.14.4",
 	"description": "Sim Deck — golf-sim controller for the Ajazz AKP153E",
 	"author": "Sim Tuner",
 	"license": "GPL-3.0-or-later",

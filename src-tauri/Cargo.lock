@@ -3500,7 +3500,7 @@ dependencies = [
 
 [[package]]
 name = "opendeck"
-version = "2.14.3"
+version = "2.14.4"
 dependencies = [
  "active-win-pos-rs",
  "anyhow",
@@ -3528,6 +3528,7 @@ dependencies = [
  "serde-inline-default",
  "serde_json",
  "serde_with",
+ "sha2",
  "streamdeck-strip-render",
  "sysinfo",
  "tauri",
