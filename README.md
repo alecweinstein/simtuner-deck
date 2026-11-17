@@ -13,7 +13,7 @@ The config directory is `%APPDATA%\com.simtuner.deck`, so this install can sit n
 
 Download the `Sim Deck` setup `.exe` from [GitHub Releases](https://github.com/alecweinstein/simtuner-deck/releases). The installer is per-user, embeds the WebView2 bootstrapper, adds a Start Menu shortcut and a desktop shortcut named Sim Deck, and launches the app when it finishes. It does not install a driver. The AKP153E is plain HID. Installing over the 2.14.2 "Sim Tuner Deck" build removes that install, its shortcuts, and its autostart entry. Config stays in `%APPDATA%\com.simtuner.deck`.
 
-The first time an Ajazz AKP153, AKP153E (`0300:1010`), or AKP153E rev. 2 (`0300:3010`) is seen with no profiles, the app copies the bundled Golf Deck profiles into that device's profile folder and selects Golf Home. Existing profiles are not overwritten.
+The first time an Ajazz AKP153, AKP153E (`0300:1010`), or AKP153E rev. 2 (`0300:3010`) is seen with no profiles, the app copies every bundled Golf Deck profile into that device's profile folder and selects Golf Home. On a later profile pack, missing pages are added. Golf Home is replaced only when its file is still byte-for-byte a previously bundled copy. Any other existing profile is left as it is.
 
 ## What is bundled
 
