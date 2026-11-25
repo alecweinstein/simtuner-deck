@@ -1,0 +1,238 @@
+{
+	"keys": [
+		{
+			"action": {
+				"name": "Switch Profile",
+				"uuid": "com.amansprojects.starterpack.switchprofile",
+				"plugin": "com.amansprojects.starterpack.sdPlugin",
+				"tooltip": "Switch the selected profile",
+				"icon": "plugins/com.amansprojects.starterpack.sdPlugin/icons/switchProfile.png",
+				"disable_automatic_states": false,
+				"visible_in_action_list": true,
+				"supported_in_multi_actions": true,
+				"property_inspector": "plugins/com.amansprojects.starterpack.sdPlugin/propertyInspector/switchProfile.html",
+				"controllers": ["Keypad", "Encoder"],
+				"states": [
+					{
+						"image_scale": 100,
+						"background_colour": "#000000",
+						"name": "",
+						"colour": "#FFFFFF",
+						"stroke_colour": "#000000",
+						"alignment": "middle",
+						"family": "Liberation Sans",
+						"style": "Regular",
+						"size": 16,
+						"stroke_size": 3,
+						"underline": false,
+						"text": "",
+						"show": true
+					}
+				]
+			},
+			"context": "Keypad.0.0",
+			"states": [
+				{
+					"text": "GSPro",
+					"text_override": "GSPro",
+					"image_scale": 100,
+					"background_colour": "#000000",
+					"name": "",
+					"show": false,
+					"colour": "#FFFFFF",
+					"stroke_colour": "#000000",
+					"alignment": "middle",
+					"family": "Liberation Sans",
+					"style": "Regular",
+					"size": 16,
+					"stroke_size": 3,
+					"underline": false
+				}
+			],
+			"current_state": 0,
+			"settings": {
+				"device": null,
+				"profile": "GSPro",
+				"anticlockwise": null,
+				"clockwise": null
+			},
+			"children": null
+		},
+		{
+			"action": {
+				"name": "Switch Profile",
+				"uuid": "com.amansprojects.starterpack.switchprofile",
+				"plugin": "com.amansprojects.starterpack.sdPlugin",
+				"tooltip": "Switch the selected profile",
+				"icon": "plugins/com.amansprojects.starterpack.sdPlugin/icons/switchProfile.png",
+				"disable_automatic_states": false,
+				"visible_in_action_list": true,
+				"supported_in_multi_actions": true,
+				"property_inspector": "plugins/com.amansprojects.starterpack.sdPlugin/propertyInspector/switchProfile.html",
+				"controllers": ["Keypad", "Encoder"],
+				"states": [
+					{
+						"image_scale": 100,
+						"background_colour": "#000000",
+						"name": "",
+						"colour": "#FFFFFF",
+						"stroke_colour": "#000000",
+						"alignment": "middle",
+						"family": "Liberation Sans",
+						"style": "Regular",
+						"size": 16,
+						"stroke_size": 3,
+						"underline": false,
+						"text": "",
+						"show": true
+					}
+				]
+			},
+			"context": "Keypad.1.0",
+			"states": [
+				{
+					"text": "PurePlay",
+					"text_override": "PurePlay",
+					"image_scale": 100,
+					"background_colour": "#000000",
+					"name": "",
+					"show": false,
+					"colour": "#FFFFFF",
+					"stroke_colour": "#000000",
+					"alignment": "middle",
+					"family": "Liberation Sans",
+					"style": "Regular",
+					"size": 16,
+					"stroke_size": 3,
+					"underline": false
+				}
+			],
+			"current_state": 0,
+			"settings": {
+				"device": null,
+				"profile": "PurePlay",
+				"anticlockwise": null,
+				"clockwise": null
+			},
+			"children": null
+		},
+		{
+			"action": {
+				"name": "Switch Profile",
+				"uuid": "com.amansprojects.starterpack.switchprofile",
+				"plugin": "com.amansprojects.starterpack.sdPlugin",
+				"tooltip": "Switch the selected profile",
+				"icon": "plugins/com.amansprojects.starterpack.sdPlugin/icons/switchProfile.png",
+				"disable_automatic_states": false,
+				"visible_in_action_list": true,
+				"supported_in_multi_actions": true,
+				"property_inspector": "plugins/com.amansprojects.starterpack.sdPlugin/propertyInspector/switchProfile.html",
+				"controllers": ["Keypad", "Encoder"],
+				"states": [
+					{
+						"image_scale": 100,
+						"background_colour": "#000000",
+						"name": "",
+						"colour": "#FFFFFF",
+						"stroke_colour": "#000000",
+						"alignment": "middle",
+						"family": "Liberation Sans",
+						"style": "Regular",
+						"size": 16,
+						"stroke_size": 3,
+						"underline": false,
+						"text": "",
+						"show": true
+					}
+				]
+			},
+			"context": "Keypad.2.0",
+			"states": [
+				{
+					"text": "Muni Golf",
+					"text_override": "Muni Golf",
+					"image_scale": 100,
+					"background_colour": "#000000",
+					"name": "",
+					"show": false,
+					"colour": "#FFFFFF",
+					"stroke_colour": "#000000",
+					"alignment": "middle",
+					"family": "Liberation Sans",
+					"style": "Regular",
+					"size": 16,
+					"stroke_size": 3,
+					"underline": false
+				}
+			],
+			"current_state": 0,
+			"settings": {
+				"device": null,
+				"profile": "Muni Golf",
+				"anticlockwise": null,
+				"clockwise": null
+			},
+			"children": null
+		},
+		{
+			"action": {
+				"name": "Switch Profile",
+				"uuid": "com.amansprojects.starterpack.switchprofile",
+				"plugin": "com.amansprojects.starterpack.sdPlugin",
+				"tooltip": "Switch the selected profile",
+				"icon": "plugins/com.amansprojects.starterpack.sdPlugin/icons/switchProfile.png",
+				"disable_automatic_states": false,
+				"visible_in_action_list": true,
+				"supported_in_multi_actions": true,
+				"property_inspector": "plugins/com.amansprojects.starterpack.sdPlugin/propertyInspector/switchProfile.html",
+				"controllers": ["Keypad", "Encoder"],
+				"states": [
+					{
+						"image_scale": 100,
+						"background_colour": "#000000",
+						"name": "",
+						"colour": "#FFFFFF",
+						"stroke_colour": "#000000",
+						"alignment": "middle",
+						"family": "Liberation Sans",
+						"style": "Regular",
+						"size": 16,
+						"stroke_size": 3,
+						"underline": false,
+						"text": "",
+						"show": true
+					}
+				]
+			},
+			"context": "Keypad.3.0",
+			"states": [
+				{
+					"text": "Sim Tuner",
+					"text_override": "Sim Tuner",
+					"image_scale": 100,
+					"background_colour": "#000000",
+					"name": "",
+					"show": false,
+					"colour": "#FFFFFF",
+					"stroke_colour": "#000000",
+					"alignment": "middle",
+					"family": "Liberation Sans",
+					"style": "Regular",
+					"size": 16,
+					"stroke_size": 3,
+					"underline": false
+				}
+			],
+			"current_state": 0,
+			"settings": {
+				"device": null,
+				"profile": "Sim Tuner",
+				"anticlockwise": null,
+				"clockwise": null
+			},
+			"children": null
+		}
+	],
+	"sliders": [],
+	"infobars": []
+}
