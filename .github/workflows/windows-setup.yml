@@ -1,6 +1,9 @@
 name: Windows setup
 
-# Sim Deck ships as one Windows NSIS setup .exe.
+# This public workflow ships the GPL app and the AKP153 device plugin only.
+# The profile pack and strip plugin are overlaid when building the official
+# paid installer, which is distributed through Whop and simtuner.com.
+# Do not attach official/full installers to public GitHub Releases.
 # Upstream OpenDeck publish workflows (Flathub, AUR, multi-platform drafts) are not used.
 
 on:
@@ -11,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -132,16 +135,5 @@ jobs:
           path: ${{ steps.exe.outputs.path }}
           if-no-files-found: error
 
-      - name: Attach setup exe to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.exe.outputs.path }}
-          name: Sim Deck ${{ github.ref_name }}
-          body: |
-            Per-user Windows NSIS setup for Sim Deck.
-            WebView2 bootstrapper is embedded. No device driver is installed.
-            The executable is Authenticode-signed only when repository signing secrets are configured.
-            Source: https://github.com/alecweinstein/simtuner-deck
-          draft: false
-          prerelease: false
+      # Official paid installers are not published on GitHub Releases.
+      # This workflow may still upload a plain-app artifact for CI.

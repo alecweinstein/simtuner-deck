@@ -12,7 +12,7 @@ Third-party notices, including MPL-2.0 components (elgato-streamdeck and, via th
 
 Bundled plugins:
 - OpenDeck Starter Pack (com.amansprojects.starterpack), GPL-3.0-or-later, built from the sources in this repository.
-- Golf Deck Strip (com.simtuner.golfdeck.strip), separate companion process shipped as the binaries in simtuner/plugin. It speaks the OpenDeck plugin protocol and is not linked into the host.
+- Golf Deck Strip (com.simtuner.golfdeck.strip), a separate companion process that speaks the OpenDeck plugin protocol and is not linked into the host. It is not part of this public source tree. Official paid installers may bundle it alongside this application.
 - Sim Deck device plugin (st.lynx.plugins.opendeck-akp153) 0.11.2, GPL-3.0-or-later.
   Source: https://github.com/alecweinstein/simtuner-deck-akp153
   Pinned commit: fedfea2aaf3c353f80807595323c96a2cc4abf43
