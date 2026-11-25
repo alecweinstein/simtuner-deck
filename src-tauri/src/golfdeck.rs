@@ -354,7 +354,7 @@ fn select_golf_home(profiles_root: &Path, device_id: &str, dest: &Path) -> Resul
 }
 
 fn bundled_profile_dir() -> Option<std::path::PathBuf> {
-	let app = crate::APP_HANDLE.get().ok()?;
+	let app = crate::APP_HANDLE.get()?;
 	let path = app
 		.path()
 		.resolve("golfdeck-profiles", tauri::path::BaseDirectory::Resource)
