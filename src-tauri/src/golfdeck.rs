@@ -14,7 +14,9 @@ const GOLF_HOME_FILE: &str = "Golf Home.json";
 /// 1 was Sim Deck 2.14.3 (7 pages). 2 was 2.14.4 (byte hash, which never matched a resaved file).
 /// 3 compares Golf Home semantically and fills the new sim keys.
 const PROFILE_SET: u32 = 3;
-/// Unmodified Golf Home shipped in Sim Deck 2.14.3, before OpenDeck re-saves it.
+/// Signature of the unmodified Golf Home shipped in Sim Deck 2.14.3 (action
+/// UUIDs and settings only; no key artwork). Used to recognize a stock 2.14.3
+/// page after OpenDeck has re-saved it.
 const GOLF_HOME_V1: &str = include_str!("../assets/golf-home-2.14.3.json");
 const SWITCH_PROFILE_UUID: &str = "com.amansprojects.starterpack.switchprofile";
 /// Profile names that were already on Golf Home in 2.14.3. Newer switch keys are the ones we merge in.
@@ -41,9 +43,13 @@ async fn seed(device: &DeviceInfo) -> Result<(), anyhow::Error> {
 		anyhow::bail!("refusing to seed profiles for unsafe device id");
 	}
 
+	let Some(bundled) = bundled_profile_dir() else {
+		log::info!("No Golf Deck profile pack in this build; skipping seed for {}", device.id);
+		return Ok(());
+	};
+
 	let profiles_root = config_dir().join("profiles");
 	let dest = profiles_root.join(&device.id);
-	let bundled = bundled_profile_dir()?;
 	let applied = read_applied_set(&device.id);
 	if directory_has_profiles(&dest) {
 		if applied >= PROFILE_SET {
@@ -347,16 +353,13 @@ fn select_golf_home(profiles_root: &Path, device_id: &str, dest: &Path) -> Resul
 	Ok(())
 }
 
-fn bundled_profile_dir() -> Result<std::path::PathBuf, anyhow::Error> {
-	let app = crate::APP_HANDLE.get().context("application handle is not set")?;
+fn bundled_profile_dir() -> Option<std::path::PathBuf> {
+	let app = crate::APP_HANDLE.get().ok()?;
 	let path = app
 		.path()
 		.resolve("golfdeck-profiles", tauri::path::BaseDirectory::Resource)
-		.context("Golf Deck profiles are not bundled")?;
-	if !path.is_dir() {
-		anyhow::bail!("bundled Golf Deck profiles missing at {}", path.display());
-	}
-	Ok(path)
+		.ok()?;
+	path.is_dir().then_some(path)
 }
 
 fn directory_has_profiles(dir: &Path) -> bool {
@@ -490,6 +493,36 @@ mod tests {
 		home
 	}
 
+	/// Signature-only 2.14.4+ Golf Home: Switch Profile keys at slots 4, 6, and 10
+	/// are the new sims merged into a user-edited 2.14.3 page.
+	fn bundled_v2_golf_home() -> serde_json::Value {
+		let switch = |profile: &str| {
+			serde_json::json!({
+				"action": { "uuid": SWITCH_PROFILE_UUID },
+				"settings": { "profile": profile }
+			})
+		};
+		let mut keys = vec![serde_json::Value::Null; 11];
+		keys[0] = switch("GSPro");
+		keys[1] = switch("PurePlay");
+		keys[2] = switch("Muni Golf");
+		keys[3] = switch("Sim Tuner");
+		keys[4] = switch("Awesome Golf");
+		keys[6] = switch("TGC 2019");
+		keys[10] = switch("Infinite Tees");
+		serde_json::json!({ "keys": keys })
+	}
+
+	#[test]
+	fn v1_golf_home_fixture_has_no_embedded_artwork() {
+		assert!(!GOLF_HOME_V1.contains("data:image"), "2.14.3 Golf Home fixture must not include key artwork");
+		let home: serde_json::Value = serde_json::from_str(GOLF_HOME_V1).unwrap();
+		assert_eq!(home["keys"][0]["settings"]["profile"], "GSPro");
+		assert_eq!(home["keys"][1]["settings"]["profile"], "PurePlay");
+		assert_eq!(home["keys"][2]["settings"]["profile"], "Muni Golf");
+		assert_eq!(home["keys"][3]["settings"]["profile"], "Sim Tuner");
+	}
+
 	#[test]
 	fn resaved_v1_golf_home_is_replaced() {
 		let root = std::env::temp_dir().join(format!("simdeck-seed-replace-{}", std::process::id()));
@@ -525,7 +558,7 @@ mod tests {
 		edited["keys"][0]["settings"]["profile"] = serde_json::json!("Custom Page");
 		fs::write(dest.join("Golf Home.json"), serde_json::to_vec_pretty(&edited).unwrap()).unwrap();
 
-		let v2: serde_json::Value = serde_json::from_str(include_str!("../../simtuner/profiles/Golf Home.json")).unwrap();
+		let v2 = bundled_v2_golf_home();
 		fs::write(bundled.join("Golf Home.json"), serde_json::to_vec(&v2).unwrap()).unwrap();
 		fs::write(bundled.join("Infinite Tees.json"), br#"{"page":"tees"}"#).unwrap();
 

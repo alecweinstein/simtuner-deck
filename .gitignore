@@ -9,3 +9,14 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Official-build overlay from the private Sim Deck pack. These paths are copied
+# in at build time and must never be committed to this public repository.
+simtuner/profiles/
+simtuner/plugin/
+simtuner/icons/
+simtuner/sensors/
+simtuner/SETUP.md
+simtuner/SHORTCUTS.md
+simtuner/installer/
+static/sim-presets.json

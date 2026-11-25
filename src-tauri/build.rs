@@ -34,10 +34,18 @@ fn install_prebuilt(src: &Path, name: &str) -> std::io::Result<()> {
 	copy_dir(src, &out_dir)
 }
 
+fn official_build() -> bool {
+	matches!(
+		std::env::var("SIMDECK_OFFICIAL").ok().as_deref().map(str::trim),
+		Some("1") | Some("true") | Some("TRUE") | Some("yes") | Some("YES")
+	)
+}
+
 fn main() {
 	println!("cargo:rerun-if-changed=../plugins");
 	println!("cargo:rerun-if-changed=../simtuner/plugin");
 	println!("cargo:rerun-if-changed=../simtuner/akp153");
+	println!("cargo:rerun-if-env-changed=SIMDECK_OFFICIAL");
 
 	let source_plugins = (|| -> Result<(), std::io::Error> {
 		for entry in fs::read_dir("../plugins")?.flatten() {
@@ -71,13 +79,34 @@ fn main() {
 		panic!("Failed to build builtin plugins: {error}");
 	}
 
-	// Prebuilt plugins. CI builds the AKP153 Windows binary from the commit in
+	// The strip plugin is part of the private pack. A public/plain build omits it.
+	// Official installers overlay it first and set SIMDECK_OFFICIAL=1 so a missing
+	// copy cannot slip through.
+	let official = official_build();
+	let optional_prebuilt = [(
+		"../simtuner/plugin/com.simtuner.golfdeck.strip.sdPlugin",
+		"com.simtuner.golfdeck.strip.sdPlugin",
+	)];
+	for (src, name) in optional_prebuilt {
+		if !Path::new(src).is_dir() {
+			if official {
+				panic!("Official build is missing required plugin {name} at {src}");
+			}
+			println!("cargo:warning=Skipping optional plugin {name}; {src} is not present");
+			continue;
+		}
+		install_prebuilt(Path::new(src), name).unwrap_or_else(|error| {
+			panic!("Failed to bundle builtin plugin {name}: {error}");
+		});
+	}
+
+	// Prebuilt device plugin. CI builds the AKP153 Windows binary from the commit in
 	// simtuner/akp153/PIN and places it in the folder below before this script runs.
-	let prebuilt = [
-		("../simtuner/plugin/com.simtuner.golfdeck.strip.sdPlugin", "com.simtuner.golfdeck.strip.sdPlugin"),
-		("../simtuner/akp153/st.lynx.plugins.opendeck-akp153.sdPlugin", "st.lynx.plugins.opendeck-akp153.sdPlugin"),
-	];
-	for (src, name) in prebuilt {
+	let required_prebuilt = [(
+		"../simtuner/akp153/st.lynx.plugins.opendeck-akp153.sdPlugin",
+		"st.lynx.plugins.opendeck-akp153.sdPlugin",
+	)];
+	for (src, name) in required_prebuilt {
 		if let Err(error) = install_prebuilt(Path::new(src), name) {
 			#[cfg(debug_assertions)]
 			eprintln!("Failed to bundle builtin plugin {name}: {error}");
